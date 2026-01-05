@@ -1,134 +1,557 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-<meta charset="UTF-8">
-<title>TXT ⇄ M3U 转换工具</title>
-<style>
-body{font-family:Arial;background:#f5f6f7}
-.container{width:95%;max-width:900px;margin:30px auto;background:#fff;padding:20px;border-radius:8px}
-h2{text-align:center}
-input,textarea,button,select{width:100%;margin:6px 0;padding:8px}
-textarea{height:160px}
-.btns{display:flex;flex-wrap:wrap;gap:8px}
-button{flex:1;background:#409eff;color:#fff;border:0;border-radius:4px;cursor:pointer}
-button:hover{opacity:.9}
-label{display:block;margin:4px 0}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>无服务器IPTV仓库管理系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+        body {
+            background: #f5f5f5;
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #333;
+        }
+        .container {
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            gap: 20px;
+        }
+        .sidebar {
+            background: #fff;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+        }
+        .main {
+            background: #fff;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+        }
+        .form-group {
+            margin-bottom: 12px;
+        }
+        label {
+            display: block;
+            margin-bottom: 4px;
+            font-size: 14px;
+            color: #666;
+        }
+        input, select, textarea {
+            width: 100%;
+            padding: 8px 10px;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        .btn {
+            width: 100%;
+            padding: 8px 0;
+            border: none;
+            border-radius: 4px;
+            background: #1677ff;
+            color: #fff;
+            cursor: pointer;
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+        .btn:hover {
+            background: #0c66e4;
+        }
+        .btn-danger {
+            background: #ff4d4f;
+        }
+        .btn-danger:hover {
+            background: #ff7875;
+        }
+        .btn-group {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+        .btn-group .btn {
+            flex: 1;
+            margin-bottom: 0;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        th {
+            background: #f8f9fa;
+            color: #333;
+        }
+        .empty-tip {
+            text-align: center;
+            padding: 20px;
+            color: #999;
+        }
+        .batch-ops {
+            margin-bottom: 15px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 4px;
+        }
+        .sortable-group {
+            margin-top: 10px;
+            max-height: 180px;
+            overflow-y: auto;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+        }
+        .sortable-item {
+            padding: 8px 10px;
+            border-bottom: 1px solid #f0f0f0;
+            cursor: move;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .sortable-item:hover {
+            background: #f8f9fa;
+        }
+        .sortable-item:last-child {
+            border-bottom: none;
+        }
+        .sort-handle {
+            color: #999;
+            cursor: move;
+        }
+        .search-box {
+            margin-bottom: 15px;
+            display: flex;
+            gap: 8px;
+        }
+        .search-box input {
+            flex: 1;
+            margin-bottom: 0;
+        }
+        .search-box button {
+            width: 80px;
+            margin-bottom: 0;
+        }
+    </style>
 </head>
-
 <body>
-<div class="container">
-<h2>TXT ⇄ M3U 转换工具</h2>
+    <div class="header">
+        <h1>无服务器IPTV仓库管理系统</h1>
+        <p>数据存储在浏览器本地，无需服务器 | 支持分组排序+频道搜索</p>
+    </div>
 
-<input id="epg" placeholder="EPG 地址（TXT → M3U）" value="https://e.erw.cc/all.xml.gz">
-<input id="logo" placeholder="基础 Logo 地址（以 / 结尾）" value="https://cdn.jsdelivr.net/gh/1996TV/LOGO1@main/icon/">
+    <div class="container">
+        <div class="sidebar">
+            <div class="form-group">
+                <label>分组名称</label>
+                <input type="text" id="groupName" placeholder="如：央视、卫视">
+            </div>
+            <button class="btn" onclick="addGroup()">添加分组</button>
+            <button class="btn btn-danger" onclick="deleteGroup()">删除当前分组</button>
 
-<label><input type="checkbox" id="clean" checked> TXT转M3U时频道名净化</label>
-<label><input type="checkbox" id="prefer" checked> M3U转TXT优先使用 tvg-name / tvg-id</label>
-<label><input type="checkbox" id="regroup"> 重新分组（忽略原分组）</label>
+            <div class="form-group" style="margin-top: 15px;">
+                <label>分组列表（拖拽排序）</label>
+                <div class="sortable-group" id="sortableGroupList"></div>
+            </div>
 
-<textarea id="input" placeholder="在此粘贴 TXT 或 M3U 列表…"></textarea>
+            <hr style="margin: 15px 0; border: none; border-top: 1px solid #eee;">
 
-<div class="btns">
-<button onclick="txtToM3u()">TXT → M3U</button>
-<button onclick="m3uToTxt()">M3U → TXT</button>
-<button onclick="reGroup()">一键重新分组</button>
-<button onclick="clearAll()">清空内容</button>
-<button onclick="copyOut()">复制结果</button>
-<button onclick="downloadOut()">下载文件</button>
-</div>
+            <div class="form-group">
+                <label>当前分组</label>
+                <select id="groupSelect" onchange="loadGroupData()"></select>
+            </div>
+            <div class="form-group">
+                <label>频道名称</label>
+                <input type="text" id="channelName" placeholder="如：CCTV-1">
+            </div>
+            <div class="form-group">
+                <label>频道链接</label>
+                <input type="text" id="channelUrl" placeholder="http://xxx">
+            </div>
+            <button class="btn" onclick="addChannel()">添加频道</button>
 
-<select id="downloadType">
-  <option value="m3u">下载为 .m3u</option>
-  <option value="txt">下载为 .txt</option>
-</select>
+            <hr style="margin: 15px 0; border: none; border-top: 1px solid #eee;">
 
-<textarea id="output" placeholder="转换结果将在这里显示…"></textarea>
-</div>
+            <div class="form-group">
+                <label>旧链接前缀</label>
+                <input type="text" id="oldPrefix" placeholder="">
+            </div>
+            <div class="form-group">
+                <label>新链接前缀</label>
+                <input type="text" id="newPrefix" placeholder="">
+            </div>
+            <button class="btn" onclick="batchReplace()">批量替换链接</button>
+        </div>
 
-<script>
-function cleanName(n){
-  return n.replace(/\s+/g,'')
-          .replace(/高清|HD|超清|频道/g,'');
-}
+        <div class="main">
+            <div class="btn-group">
+                <button class="btn" onclick="exportM3U()">导出当前分组为 M3U</button>
+                <button class="btn" onclick="exportTXT()">导出当前分组为 TXT</button>
+                <button class="btn btn-danger" onclick="clearAllData()">清空所有数据</button>
+            </div>
 
-function txtToM3u(){
-  let epg=document.getElementById('epg').value.trim();
-  let logo=document.getElementById('logo').value.trim();
-  let clean=document.getElementById('clean').checked;
-  let lines=input.value.split('\n');
-  let out=`#EXTM3U x-tvg-url="${epg}"\n`;
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="输入频道名称搜索...">
+                <button class="btn" onclick="searchChannel()">搜索</button>
+                <button class="btn" onclick="resetSearch()">重置</button>
+            </div>
 
-  lines.forEach(l=>{
-    if(!l.includes(','))return;
-    let [name,url]=l.split(',');
-    name=name.trim();
-    url=url.trim();
-    if(clean) name=cleanName(name);
-    let logoUrl=logo?logo+name+'.png':'';
-    out+=`#EXTINF:-1 tvg-name="${name}" tvg-logo="${logoUrl}",${name}\n${url}\n`;
-  });
-  output.value=out;
-}
+            <div class="batch-ops">
+                <label>批量导入（M3U/TXT 格式，一行一个频道 名称,链接）</label>
+                <textarea id="batchImport" placeholder="例：
+CCTV-1,http://xxx
+CCTV-2,http://xxx"></textarea>
+                <button class="btn" onclick="importBatch()">批量导入</button>
+            </div>
 
-function m3uToTxt(){
-  let prefer=document.getElementById('prefer').checked;
-  let lines=input.value.split('\n');
-  let name='';
-  let out='';
-  lines.forEach(l=>{
-    if(l.startsWith('#EXTINF')){
-      let m=l.match(/tvg-name="([^"]+)"/);
-      let n=l.match(/,(.*)$/);
-      name=prefer && m?m[1]:(n?n[1]:'');
-    }else if(l.startsWith('http')){
-      out+=`${name},${l}\n`;
-    }
-  });
-  output.value=out;
-}
+            <table>
+                <thead>
+                    <tr>
+                        <th>序号</th>
+                        <th>频道名称</th>
+                        <th>频道链接</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody id="channelTable"></tbody>
+            </table>
+        </div>
+    </div>
 
-function reGroup(){
-  let lines=input.value.split('\n');
-  let out='#EXTM3U\n';
-  lines.forEach(l=>{
-    if(l.startsWith('#EXTINF')){
-      out+=l.replace(/group-title="[^"]*"/,'group-title="默认"')+'\n';
-    }else if(l.startsWith('http')){
-      out+=l+'\n';
-    }
-  });
-  output.value=out;
-}
+    <script>
+        let iptvData = JSON.parse(localStorage.getItem('iptvData')) || { groups: [], data: {} };
+        let originChannelData = [];
 
-function clearAll(){
-  input.value='';
-  output.value='';
-}
+        window.onload = function() {
+            loadGroupSelect();
+            renderSortableGroupList();
+            loadGroupData();
+            initSortable();
+        };
 
-function copyOut(){
-  output.select();
-  document.execCommand('copy');
-  alert('已复制');
-}
+        function renderSortableGroupList() {
+            const list = document.getElementById('sortableGroupList');
+            list.innerHTML = '';
+            iptvData.groups.forEach(group => {
+                const item = document.createElement('div');
+                item.className = 'sortable-item';
+                item.dataset.group = group;
+                item.innerHTML = `
+                    <span>${group}</span>
+                    <span class="sort-handle">☰</span>
+                `;
+                list.appendChild(item);
+            });
+            if (iptvData.groups.length === 0) {
+                list.innerHTML = '<div class="empty-tip" style="padding: 8px;">暂无分组</div>';
+            }
+        }
 
-function downloadOut(){
-  const text = output.value;
-  if(!text){
-    alert('没有可下载内容');
-    return;
-  }
-  const type = document.getElementById('downloadType').value;
-  const blob = new Blob([text], {type: 'text/plain;charset=utf-8'});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = 'playlist.' + type;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-}
-</script>
+        function initSortable() {
+            const list = document.getElementById('sortableGroupList');
+            let draggedItem = null;
+
+            list.addEventListener('mousedown', function(e) {
+                if (e.target.classList.contains('sort-handle')) {
+                    draggedItem = e.target.closest('.sortable-item');
+                    draggedItem.style.opacity = '0.5';
+                    draggedItem.style.cursor = 'grabbing';
+                }
+            });
+
+            document.addEventListener('mousemove', function(e) {
+                if (!draggedItem) return;
+                e.preventDefault();
+                const y = e.clientY - list.getBoundingClientRect().top - draggedItem.offsetHeight / 2;
+                draggedItem.style.position = 'absolute';
+                draggedItem.style.left = list.getBoundingClientRect().left + 'px';
+                draggedItem.style.width = list.offsetWidth + 'px';
+                draggedItem.style.top = y + 'px';
+                draggedItem.style.zIndex = '100';
+            });
+
+            document.addEventListener('mouseup', function(e) {
+                if (!draggedItem) return;
+                draggedItem.style.opacity = '1';
+                draggedItem.style.cursor = 'move';
+                draggedItem.style.position = 'static';
+                draggedItem.style.zIndex = '1';
+
+                const dropTarget = document.elementFromPoint(e.clientX, e.clientY).closest('.sortable-item');
+                if (dropTarget && dropTarget !== draggedItem) {
+                    const draggedGroup = draggedItem.dataset.group;
+                    const targetGroup = dropTarget.dataset.group;
+                    const draggedIndex = iptvData.groups.indexOf(draggedGroup);
+                    const targetIndex = iptvData.groups.indexOf(targetGroup);
+                    
+                    iptvData.groups.splice(draggedIndex, 1);
+                    iptvData.groups.splice(targetIndex, 0, draggedGroup);
+                    saveData();
+                    loadGroupSelect();
+                    renderSortableGroupList();
+                }
+                draggedItem = null;
+            });
+        }
+
+        function loadGroupSelect() {
+            const select = document.getElementById('groupSelect');
+            select.innerHTML = '';
+            iptvData.groups.forEach(group => {
+                const option = document.createElement('option');
+                option.value = group;
+                option.textContent = group;
+                select.appendChild(option);
+            });
+            if (iptvData.groups.length === 0) {
+                const option = document.createElement('option');
+                option.value = '';
+                option.textContent = '暂无分组';
+                select.appendChild(option);
+            }
+        }
+
+        function addGroup() {
+            const groupName = document.getElementById('groupName').value.trim();
+            if (!groupName) {
+                alert('请输入分组名称');
+                return;
+            }
+            if (iptvData.groups.includes(groupName)) {
+                alert('分组已存在');
+                return;
+            }
+            iptvData.groups.push(groupName);
+            iptvData.data[groupName] = [];
+            saveData();
+            loadGroupSelect();
+            renderSortableGroupList();
+            document.getElementById('groupName').value = '';
+        }
+
+        function deleteGroup() {
+            const group = document.getElementById('groupSelect').value;
+            if (!group) {
+                alert('请选择要删除的分组');
+                return;
+            }
+            if (confirm(`确定删除分组【${group}】吗？`)) {
+                iptvData.groups = iptvData.groups.filter(g => g !== group);
+                delete iptvData.data[group];
+                saveData();
+                loadGroupSelect();
+                renderSortableGroupList();
+                loadGroupData();
+            }
+        }
+
+        function loadGroupData() {
+            const group = document.getElementById('groupSelect').value;
+            const table = document.getElementById('channelTable');
+            table.innerHTML = '';
+            if (!group || !iptvData.data[group]) {
+                table.innerHTML = '<tr><td colspan="4" class="empty-tip">暂无频道数据</td></tr>';
+                originChannelData = [];
+                return;
+            }
+            originChannelData = [...iptvData.data[group]];
+            renderChannelTable(originChannelData);
+        }
+
+        function renderChannelTable(data) {
+            const table = document.getElementById('channelTable');
+            table.innerHTML = '';
+            if (data.length === 0) {
+                table.innerHTML = '<tr><td colspan="4" class="empty-tip">暂无频道数据</td></tr>';
+                return;
+            }
+            data.forEach((item, index) => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${index + 1}</td>
+                    <td>${item.name}</td>
+                    <td style="max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${item.url}</td>
+                    <td>
+                        <button class="btn" style="width: auto; padding: 4px 8px;" onclick="editChannel(${index})">编辑</button>
+                        <button class="btn btn-danger" style="width: auto; padding: 4px 8px;" onclick="deleteChannel(${index})">删除</button>
+                    </td>
+                `;
+                table.appendChild(tr);
+            });
+        }
+
+        function searchChannel() {
+            const keyword = document.getElementById('searchInput').value.trim().toLowerCase();
+            if (!keyword) {
+                renderChannelTable(originChannelData);
+                return;
+            }
+            const filteredData = originChannelData.filter(item => 
+                item.name.toLowerCase().includes(keyword) || item.url.toLowerCase().includes(keyword)
+            );
+            renderChannelTable(filteredData);
+        }
+
+        function resetSearch() {
+            document.getElementById('searchInput').value = '';
+            renderChannelTable(originChannelData);
+        }
+
+        function addChannel() {
+            const group = document.getElementById('groupSelect').value;
+            const name = document.getElementById('channelName').value.trim();
+            const url = document.getElementById('channelUrl').value.trim();
+            if (!group) {
+                alert('请先选择分组');
+                return;
+            }
+            if (!name || !url) {
+                alert('请填写频道名称和链接');
+                return;
+            }
+            iptvData.data[group].push({ name, url });
+            saveData();
+            loadGroupData();
+            document.getElementById('channelName').value = '';
+            document.getElementById('channelUrl').value = '';
+        }
+
+        function editChannel(index) {
+            const group = document.getElementById('groupSelect').value;
+            const item = originChannelData[index];
+            document.getElementById('channelName').value = item.name;
+            document.getElementById('channelUrl').value = item.url;
+            document.querySelector('.sidebar .btn:nth-child(6)').onclick = function() {
+                const newName = document.getElementById('channelName').value.trim();
+                const newUrl = document.getElementById('channelUrl').value.trim();
+                if (!newName || !newUrl) {
+                    alert('请填写完整信息');
+                    return;
+                }
+                iptvData.data[group][index] = { name: newName, url: newUrl };
+                saveData();
+                loadGroupData();
+                document.getElementById('channelName').value = '';
+                document.getElementById('channelUrl').value = '';
+                document.querySelector('.sidebar .btn:nth-child(6)').onclick = addChannel;
+            };
+        }
+
+        function deleteChannel(index) {
+            const group = document.getElementById('groupSelect').value;
+            if (confirm('确定删除该频道吗？')) {
+                iptvData.data[group].splice(index, 1);
+                saveData();
+                loadGroupData();
+            }
+        }
+
+        function batchReplace() {
+            const group = document.getElementById('groupSelect').value;
+            const oldPrefix = document.getElementById('oldPrefix').value.trim();
+            const newPrefix = document.getElementById('newPrefix').value.trim();
+            if (!group || !oldPrefix) {
+                alert('请选择分组并填写旧链接前缀');
+                return;
+            }
+            iptvData.data[group] = iptvData.data[group].map(item => ({
+                name: item.name,
+                url: item.url.replace(oldPrefix, newPrefix)
+            }));
+            saveData();
+            loadGroupData();
+            alert('批量替换完成！');
+        }
+
+        function importBatch() {
+            const group = document.getElementById('groupSelect').value;
+            const content = document.getElementById('batchImport').value.trim();
+            if (!group || !content) {
+                alert('请选择分组并填写导入内容');
+                return;
+            }
+            const lines = content.split('\n');
+            const channels = [];
+            lines.forEach(line => {
+                const [name, url] = line.split(',').map(item => item.trim());
+                if (name && url) {
+                    channels.push({ name, url });
+                }
+            });
+            iptvData.data[group] = [...iptvData.data[group], ...channels];
+            saveData();
+            loadGroupData();
+            document.getElementById('batchImport').value = '';
+            alert(`成功导入 ${channels.length} 个频道！`);
+        }
+
+        function exportM3U() {
+            const group = document.getElementById('groupSelect').value;
+            if (!group || !iptvData.data[group].length) {
+                alert('当前分组无数据');
+                return;
+            }
+            let m3uContent = '#EXTM3U\n';
+            iptvData.data[group].forEach(item => {
+                m3uContent += `#EXTINF:-1,${item.name}\n${item.url}\n`;
+            });
+            downloadFile(`${group}.m3u`, m3uContent);
+        }
+
+        function exportTXT() {
+            const group = document.getElementById('groupSelect').value;
+            if (!group || !iptvData.data[group].length) {
+                alert('当前分组无数据');
+                return;
+            }
+            let txtContent = '';
+            iptvData.data[group].forEach(item => {
+                txtContent += `${item.name},${item.url}\n`;
+            });
+            downloadFile(`${group}.txt`, txtContent);
+        }
+
+        function clearAllData() {
+            if (confirm('确定清空所有数据吗？此操作不可恢复！')) {
+                iptvData = { groups: [], data: {} };
+                saveData();
+                loadGroupSelect();
+                renderSortableGroupList();
+                loadGroupData();
+            }
+        }
+
+        function saveData() {
+            localStorage.setItem('iptvData', JSON.stringify(iptvData));
+        }
+
+        function downloadFile(filename, content) {
+            const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = filename;
+            a.click();
+            URL.revokeObjectURL(a.href);
+        }
+    </script>
 </body>
 </html>
