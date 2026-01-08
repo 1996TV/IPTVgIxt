@@ -2,555 +2,312 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>无服务器IPTV仓库管理系统</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>LITV IPTV 直播源生成器</title>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: Arial, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", Arial, sans-serif;
         }
         body {
             background: #f5f5f5;
             padding: 20px;
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-        .header {
-            text-align: center;
-            margin-bottom: 20px;
-            color: #333;
+            max-width: 100%;
         }
         .container {
-            display: grid;
-            grid-template-columns: 280px 1fr;
-            gap: 20px;
-        }
-        .sidebar {
+            max-width: 800px;
+            margin: 0 auto;
             background: #fff;
-            padding: 15px;
-            border-radius: 8px;
-            box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
         }
-        .main {
-            background: #fff;
-            padding: 15px;
-            border-radius: 8px;
-            box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+        h1 {
+            font-size: 20px;
+            color: #333;
+            text-align: center;
+            margin-bottom: 20px;
+            font-weight: 600;
         }
-        .form-group {
-            margin-bottom: 12px;
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
         }
-        label {
-            display: block;
-            margin-bottom: 4px;
-            font-size: 14px;
-            color: #666;
-        }
-        input, select, textarea {
-            width: 100%;
-            padding: 8px 10px;
-            border: 1px solid #e0e0e0;
-            border-radius: 4px;
-            font-size: 14px;
-        }
-        textarea {
-            min-height: 100px;
-            resize: vertical;
-        }
-        .btn {
-            width: 100%;
-            padding: 8px 0;
+        button {
+            flex: 1;
+            padding: 12px;
             border: none;
-            border-radius: 4px;
+            border-radius: 8px;
             background: #1677ff;
             color: #fff;
             cursor: pointer;
             font-size: 14px;
-            margin-bottom: 8px;
+            transition: all 0.2s;
         }
-        .btn:hover {
-            background: #0c66e4;
+        button:hover {
+            opacity: 0.9;
         }
-        .btn-danger {
-            background: #ff4d4f;
+        button.gray {
+            background: #666;
         }
-        .btn-danger:hover {
-            background: #ff7875;
-        }
-        .btn-group {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 15px;
-        }
-        .btn-group .btn {
-            flex: 1;
-            margin-bottom: 0;
-        }
-        table {
+        textarea {
             width: 100%;
-            border-collapse: collapse;
-            margin-top: 10px;
-        }
-        th, td {
-            padding: 10px;
-            text-align: left;
-            border-bottom: 1px solid #e0e0e0;
-        }
-        th {
-            background: #f8f9fa;
-            color: #333;
-        }
-        .empty-tip {
-            text-align: center;
-            padding: 20px;
-            color: #999;
-        }
-        .batch-ops {
+            height: 300px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 12px;
+            line-height: 1.5;
+            resize: vertical;
             margin-bottom: 15px;
-            padding: 10px;
-            background: #f8f9fa;
-            border-radius: 4px;
+            background: #fafafa;
         }
-        .sortable-group {
-            margin-top: 10px;
-            max-height: 180px;
+        .channel-list {
+            max-height: 200px;
             overflow-y: auto;
-            border: 1px solid #e0e0e0;
-            border-radius: 4px;
+            border: 1px solid #eee;
+            border-radius: 8px;
+            margin-bottom: 20px;
         }
-        .sortable-item {
-            padding: 8px 10px;
-            border-bottom: 1px solid #f0f0f0;
-            cursor: move;
+        .channel-item {
+            padding: 10px 15px;
+            border-bottom: 1px solid #f5f5f5;
+            cursor: pointer;
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
-        .sortable-item:hover {
-            background: #f8f9fa;
-        }
-        .sortable-item:last-child {
+        .channel-item:last-child {
             border-bottom: none;
         }
-        .sort-handle {
+        .channel-item:hover {
+            background: #e8f4ff;
+        }
+        .channel-name {
+            font-size: 14px;
+            color: #333;
+        }
+        .channel-id {
+            font-size: 12px;
+            color: #666;
+            font-family: monospace;
+        }
+        .tip {
+            font-size: 12px;
             color: #999;
-            cursor: move;
-        }
-        .search-box {
-            margin-bottom: 15px;
-            display: flex;
-            gap: 8px;
-        }
-        .search-box input {
-            flex: 1;
-            margin-bottom: 0;
-        }
-        .search-box button {
-            width: 80px;
-            margin-bottom: 0;
+            text-align: center;
+            margin-top: 10px;
+            line-height: 1.4;
         }
     </style>
 </head>
 <body>
-    <div class="header">
-        <h1>无服务器IPTV仓库管理系统</h1>
-        <p>数据存储在浏览器本地，无需服务器 | 支持分组排序+频道搜索</p>
-    </div>
-
     <div class="container">
-        <div class="sidebar">
-            <div class="form-group">
-                <label>分组名称</label>
-                <input type="text" id="groupName" placeholder="如：央视、卫视">
-            </div>
-            <button class="btn" onclick="addGroup()">添加分组</button>
-            <button class="btn btn-danger" onclick="deleteGroup()">删除当前分组</button>
+        <h1>LITV IPTV 直播源生成器</h1>
 
-            <div class="form-group" style="margin-top: 15px;">
-                <label>分组列表（拖拽排序）</label>
-                <div class="sortable-group" id="sortableGroupList"></div>
-            </div>
-
-            <hr style="margin: 15px 0; border: none; border-top: 1px solid #eee;">
-
-            <div class="form-group">
-                <label>当前分组</label>
-                <select id="groupSelect" onchange="loadGroupData()"></select>
-            </div>
-            <div class="form-group">
-                <label>频道名称</label>
-                <input type="text" id="channelName" placeholder="如：CCTV-1">
-            </div>
-            <div class="form-group">
-                <label>频道链接</label>
-                <input type="text" id="channelUrl" placeholder="http://xxx">
-            </div>
-            <button class="btn" onclick="addChannel()">添加频道</button>
-
-            <hr style="margin: 15px 0; border: none; border-top: 1px solid #eee;">
-
-            <div class="form-group">
-                <label>旧链接前缀</label>
-                <input type="text" id="oldPrefix" placeholder="">
-            </div>
-            <div class="form-group">
-                <label>新链接前缀</label>
-                <input type="text" id="newPrefix" placeholder="">
-            </div>
-            <button class="btn" onclick="batchReplace()">批量替换链接</button>
+        <div class="btn-group">
+            <button onclick="generateFullM3U()">生成完整 M3U 播放列表</button>
+            <button onclick="copyResult()" class="gray">复制结果</button>
+            <button onclick="downloadResult()" class="gray">下载文件</button>
         </div>
 
-        <div class="main">
-            <div class="btn-group">
-                <button class="btn" onclick="exportM3U()">导出当前分组为 M3U</button>
-                <button class="btn" onclick="exportTXT()">导出当前分组为 TXT</button>
-                <button class="btn btn-danger" onclick="clearAllData()">清空所有数据</button>
-            </div>
+        <div class="channel-list" id="channelList">
+            <!-- 频道列表由JS生成 -->
+        </div>
 
-            <div class="search-box">
-                <input type="text" id="searchInput" placeholder="输入频道名称搜索...">
-                <button class="btn" onclick="searchChannel()">搜索</button>
-                <button class="btn" onclick="resetSearch()">重置</button>
-            </div>
+        <textarea id="resultArea" placeholder="生成的播放源内容会显示在这里..."></textarea>
 
-            <div class="batch-ops">
-                <label>批量导入（M3U/TXT 格式，一行一个频道 名称,链接）</label>
-                <textarea id="batchImport" placeholder="例：
-CCTV-1,http://xxx
-CCTV-2,http://xxx"></textarea>
-                <button class="btn" onclick="importBatch()">批量导入</button>
-            </div>
-
-            <table>
-                <thead>
-                    <tr>
-                        <th>序号</th>
-                        <th>频道名称</th>
-                        <th>频道链接</th>
-                        <th>操作</th>
-                    </tr>
-                </thead>
-                <tbody id="channelTable"></tbody>
-            </table>
+        <div class="tip">
+            1. 点击频道可生成单个频道的 M3U8 地址<br>
+            2. 生成的 M3U 可直接导入 IPTV 播放器<br>
+            3. 无需后端服务器，纯前端运行
         </div>
     </div>
 
     <script>
-        let iptvData = JSON.parse(localStorage.getItem('iptvData')) || { groups: [], data: {} };
-        let originChannelData = [];
-
-        window.onload = function() {
-            loadGroupSelect();
-            renderSortableGroupList();
-            loadGroupData();
-            initSortable();
+        // 频道配置（和原PHP脚本一致）
+        const CHANNELS = {
+            "4gtv-4gtv002":[1,11,"民視"],
+            "4gtv-4gtv003":[1,7,"民視第一台"],
+            "litv-ftv13":[1,7,"民視新聞台"],
+            "4gtv-4gtv001":[1,7,"民視台灣台"],
+            "litv-ftv09":[1,6,"民視影劇台"],
+            "litv-ftv07":[1,6,"民視旅遊台"],
+            "4gtv-4gtv004":[1,9,"民視綜藝台"],
+            "4gtv-4gtv040":[1,7,"中視"],
+            "4gtv-4gtv074":[1,6,"中視新聞台"],
+            "4gtv-4gtv009":[2,9,"中天新聞台"],
+            "4gtv-4gtv041":[1,7,"華視"],
+            "4gtv-4gtv052":[1,6,"華視新聞"],
+            "4gtv-4gtv046":[1,7,"靖天綜合台"],
+            "4gtv-4gtv063":[1,8,"靖天國際台"],
+            "4gtv-4gtv058":[1,9,"靖天戲劇台"],
+            "4gtv-4gtv062":[1,9,"靖天育樂台"],
+            "4gtv-4gtv065":[1,9,"靖天資訊台"],
+            "4gtv-4gtv061":[1,7,"靖天電影台"],
+            "4gtv-4gtv054":[1,9,"靖天歡樂台"],
+            "litv-longturn12":[5,2,"龍華偶像台"],
+            "litv-longturn01":[4,5,"龍華卡通台"],
+            "litv-longturn18":[5,6,"龍華戲劇台"],
+            "litv-longturn11":[5,2,"龍華日韓台"],
+            "litv-longturn21":[5,6,"龍華經典台"],
+            "litv-longturn03":[5,6,"龍華電影台"],
+            "litv-longturn02":[5,2,"龍華洋片台"],
+            "4gtv-4gtv045":[1,7,"靖洋戲劇台"],
+            "4gtv-4gtv057":[1,7,"靖洋卡通NiceBingo"],
+            "litv-longturn14":[1,6,"寰宇新聞台"],
+            "4gtv-4gtv156":[1,8,"寰宇新聞台灣台"],
+            "4gtv-4gtv158":[1,2,"寰宇財經台"],
+            "4gtv-4gtv073":[1,6,"TVBS"],
+            "4gtv-4gtv072":[1,6,"TVBS新聞台"],
+            "4gtv-4gtv068":[1,8,"TVBS歡樂台"],
+            "4gtv-4gtv067":[1,9,"TVBS精采台"],
+            "4gtv-4gtv034":[1,7,"八大精彩台"],
+            "4gtv-4gtv039":[1,6,"八大綜藝台"],
+            "4gtv-4gtv070":[1,9,"ELTA娛樂台"],
+            "litv-longturn20":[5,7,"ELTV生活英語"],
+            "4gtv-4gtv152":[1,7,"東森新聞"],
+            "4gtv-4gtv153":[1,6,"東森財經新聞"],
+            "4gtv-4gtv075":[1,6,"鏡電視新聞台"],
+            "4gtv-4gtv076":[1,7,"亞洲旅遊台"],
+            "4gtv-4gtv053":[1,9,"GINXEsportsTV"],
+            "4gtv-4gtv014":[1,6,"時尚運動X"],
+            "4gtv-4gtv101":[1,6,"智林體育台"],
+            "4gtv-4gtv077":[1,5,"TraceSports"],
+            "4gtv-4gtv011":[1,7,"影迷數位電影台"],
+            "4gtv-4gtv017":[1,7,"AMC電影台"],
+            "4gtv-4gtv042":[1,7,"公視戲劇台"],
+            "4gtv-4gtv049":[1,9,"采昌影劇台"],
+            "litv-longturn22":[5,2,"台灣戲劇台"],
+            "litv-ftv15":[1,7,"影迷數位紀實台"],
+            "4gtv-4gtv018":[1,7,"達文西頻道"],
+            "4gtv-4gtv059":[1,7,"Classica古典樂"],
+            "4gtv-4gtv083":[1,6,"MezzoLive"],
+            "4gtv-4gtv006":[1,10,"豬哥亮歌廳秀"],
+            "4gtv-4gtv082":[1,7,"TraceUrban"],
+            "4gtv-4gtv016":[1,7,"韓國娛樂台"],
+            "4gtv-4gtv079":[1,8,"ArirangTV"],
+            "litv-ftv10":[1,7,"MCE 我的歐洲電影"],
+            "4gtv-4gtv104":[1,7,"第1商業台"],
+            "4gtv-4gtv110":[1,6,"Pet Club TV"],
+            "litv-longturn19":[5,7,"Smart知識台"],
+            "4gtv-4gtv013":[1,7,"視納華仁紀實頻道"],
+            "4gtv-4gtv043":[1,7,"客家電視台"],
+            "litv-ftv16":[1,6,"好消息"],
+            "litv-ftv17":[1,6,"好消息2台"],
+            "4gtv-4gtv084":[1,7,"國會頻道1"],
+            "4gtv-4gtv085":[1,6,"國會頻道2"],
+            "4gtv-4gtv155":[1,7,"民視"],
+            "4gtv-4gtv080":[1,8,"中視經典台"],
+            "4gtv-4gtv064":[1,9,"中視菁采台"],
+            "4gtv-4gtv109":[1,9,"中天亞洲台"],
+            "4gtv-4gtv066":[1,6,"台視"],
+            "4gtv-4gtv051":[1,6,"台視新聞台"],
+            "4gtv-4gtv056":[1,6,"台視財經台"],
+            "litv-longturn07":[5,2,"博斯運動一台"],
+            "litv-longturn08":[5,2,"博斯運動二台"],
+            "litv-longturn10":[5,2,"博斯無限台"],
+            "litv-longturn13":[4,6,"博斯無限二台"],
+            "litv-longturn09":[5,2,"博斯網球台"],
+            "litv-longturn05":[5,2,"博斯高球台"],
+            "litv-longturn06":[5,2,"博斯高球二台"],
+            "litv-longturn04":[5,7,"博斯魅力台"],
+            "4gtv-4gtv010":[1,7,"非凡新聞台"],
+            "4gtv-4gtv048":[1,7,"非凡商業台"],
+            "litv-ftv03":[1,7,"VOA美國之音"]
         };
 
-        function renderSortableGroupList() {
-            const list = document.getElementById('sortableGroupList');
-            list.innerHTML = '';
-            iptvData.groups.forEach(group => {
-                const item = document.createElement('div');
-                item.className = 'sortable-item';
-                item.dataset.group = group;
-                item.innerHTML = `
-                    <span>${group}</span>
-                    <span class="sort-handle">☰</span>
+        // 页面加载时生成频道列表
+        window.onload = function() {
+            renderChannelList();
+        };
+
+        // 渲染频道列表
+        function renderChannelList() {
+            const listEl = document.getElementById('channelList');
+            let html = '';
+            for (const [id, [qlt, alt, name]] of Object.entries(CHANNELS)) {
+                html += `
+                <div class="channel-item" onclick="generateSingleChannel('${id}')">
+                    <span class="channel-name">${name}</span>
+                    <span class="channel-id">${id}</span>
+                </div>
                 `;
-                list.appendChild(item);
-            });
-            if (iptvData.groups.length === 0) {
-                list.innerHTML = '<div class="empty-tip" style="padding: 8px;">暂无分组</div>';
             }
+            listEl.innerHTML = html;
         }
 
-        function initSortable() {
-            const list = document.getElementById('sortableGroupList');
-            let draggedItem = null;
-
-            list.addEventListener('mousedown', function(e) {
-                if (e.target.classList.contains('sort-handle')) {
-                    draggedItem = e.target.closest('.sortable-item');
-                    draggedItem.style.opacity = '0.5';
-                    draggedItem.style.cursor = 'grabbing';
-                }
-            });
-
-            document.addEventListener('mousemove', function(e) {
-                if (!draggedItem) return;
-                e.preventDefault();
-                const y = e.clientY - list.getBoundingClientRect().top - draggedItem.offsetHeight / 2;
-                draggedItem.style.position = 'absolute';
-                draggedItem.style.left = list.getBoundingClientRect().left + 'px';
-                draggedItem.style.width = list.offsetWidth + 'px';
-                draggedItem.style.top = y + 'px';
-                draggedItem.style.zIndex = '100';
-            });
-
-            document.addEventListener('mouseup', function(e) {
-                if (!draggedItem) return;
-                draggedItem.style.opacity = '1';
-                draggedItem.style.cursor = 'move';
-                draggedItem.style.position = 'static';
-                draggedItem.style.zIndex = '1';
-
-                const dropTarget = document.elementFromPoint(e.clientX, e.clientY).closest('.sortable-item');
-                if (dropTarget && dropTarget !== draggedItem) {
-                    const draggedGroup = draggedItem.dataset.group;
-                    const targetGroup = dropTarget.dataset.group;
-                    const draggedIndex = iptvData.groups.indexOf(draggedGroup);
-                    const targetIndex = iptvData.groups.indexOf(targetGroup);
-                    
-                    iptvData.groups.splice(draggedIndex, 1);
-                    iptvData.groups.splice(targetIndex, 0, draggedGroup);
-                    saveData();
-                    loadGroupSelect();
-                    renderSortableGroupList();
-                }
-                draggedItem = null;
-            });
+        // 获取当前页面URL（用于生成播放列表中的链接）
+        function getCurrentUrl() {
+            return window.location.href.split('?')[0];
         }
 
-        function loadGroupSelect() {
-            const select = document.getElementById('groupSelect');
-            select.innerHTML = '';
-            iptvData.groups.forEach(group => {
-                const option = document.createElement('option');
-                option.value = group;
-                option.textContent = group;
-                select.appendChild(option);
-            });
-            if (iptvData.groups.length === 0) {
-                const option = document.createElement('option');
-                option.value = '';
-                option.textContent = '暂无分组';
-                select.appendChild(option);
+        // 生成完整M3U播放列表
+        function generateFullM3U() {
+            const baseUrl = getCurrentUrl();
+            let m3u = "#EXTM3U\n";
+            for (const [id, [qlt, alt, name]] of Object.entries(CHANNELS)) {
+                m3u += `#EXTINF:-1 tvg-id="${id}" tvg-name="${name}" group-title="LITV系列",${name}\n`;
+                m3u += `${baseUrl}?id=${id}\n`;
             }
+            document.getElementById('resultArea').value = m3u;
         }
 
-        function addGroup() {
-            const groupName = document.getElementById('groupName').value.trim();
-            if (!groupName) {
-                alert('请输入分组名称');
+        // 生成单个频道的M3U8地址
+        function generateSingleChannel(id) {
+            const [qlt, alt, name] = CHANNELS[id];
+            const timestamp = Math.floor(Date.now() / 1000 / 4 - 355017628);
+            const t = timestamp * 4;
+            let m3u8 = "#EXTM3U\n";
+            m3u8 += "#EXT-X-VERSION:3\n";
+            m3u8 += "#EXT-X-TARGETDURATION:4\n";
+            m3u8 += `#EXT-X-MEDIA-SEQUENCE:${timestamp}\n`;
+            
+            let currentTs = timestamp;
+            let currentT = t;
+            for (let i = 0; i < 10; i++) {
+                m3u8 += "#EXTINF:4,\n";
+                m3u8 += `https://ntd-tgc.cdn.hinet.net/live/pool/${id}/litv-pc/${id}-avc1_6000000=${qlt}-mp4a_134000_zho=${alt}-begin=${currentT}0000000-dur=40000000-seq=${currentTs}.ts\n`;
+                currentTs++;
+                currentT += 4;
+            }
+            document.getElementById('resultArea').value = m3u8;
+            alert(`已生成【${name}】的 M3U8 播放流`);
+        }
+
+        // 复制结果
+        function copyResult() {
+            const textarea = document.getElementById('resultArea');
+            if (!textarea.value) {
+                alert('暂无内容可复制！');
                 return;
             }
-            if (iptvData.groups.includes(groupName)) {
-                alert('分组已存在');
+            textarea.select();
+            document.execCommand('copy');
+            alert('复制成功！');
+        }
+
+        // 下载结果
+        function downloadResult() {
+            const textarea = document.getElementById('resultArea');
+            if (!textarea.value) {
+                alert('暂无内容可下载！');
                 return;
             }
-            iptvData.groups.push(groupName);
-            iptvData.data[groupName] = [];
-            saveData();
-            loadGroupSelect();
-            renderSortableGroupList();
-            document.getElementById('groupName').value = '';
-        }
-
-        function deleteGroup() {
-            const group = document.getElementById('groupSelect').value;
-            if (!group) {
-                alert('请选择要删除的分组');
-                return;
-            }
-            if (confirm(`确定删除分组【${group}】吗？`)) {
-                iptvData.groups = iptvData.groups.filter(g => g !== group);
-                delete iptvData.data[group];
-                saveData();
-                loadGroupSelect();
-                renderSortableGroupList();
-                loadGroupData();
-            }
-        }
-
-        function loadGroupData() {
-            const group = document.getElementById('groupSelect').value;
-            const table = document.getElementById('channelTable');
-            table.innerHTML = '';
-            if (!group || !iptvData.data[group]) {
-                table.innerHTML = '<tr><td colspan="4" class="empty-tip">暂无频道数据</td></tr>';
-                originChannelData = [];
-                return;
-            }
-            originChannelData = [...iptvData.data[group]];
-            renderChannelTable(originChannelData);
-        }
-
-        function renderChannelTable(data) {
-            const table = document.getElementById('channelTable');
-            table.innerHTML = '';
-            if (data.length === 0) {
-                table.innerHTML = '<tr><td colspan="4" class="empty-tip">暂无频道数据</td></tr>';
-                return;
-            }
-            data.forEach((item, index) => {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td>${index + 1}</td>
-                    <td>${item.name}</td>
-                    <td style="max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${item.url}</td>
-                    <td>
-                        <button class="btn" style="width: auto; padding: 4px 8px;" onclick="editChannel(${index})">编辑</button>
-                        <button class="btn btn-danger" style="width: auto; padding: 4px 8px;" onclick="deleteChannel(${index})">删除</button>
-                    </td>
-                `;
-                table.appendChild(tr);
-            });
-        }
-
-        function searchChannel() {
-            const keyword = document.getElementById('searchInput').value.trim().toLowerCase();
-            if (!keyword) {
-                renderChannelTable(originChannelData);
-                return;
-            }
-            const filteredData = originChannelData.filter(item => 
-                item.name.toLowerCase().includes(keyword) || item.url.toLowerCase().includes(keyword)
-            );
-            renderChannelTable(filteredData);
-        }
-
-        function resetSearch() {
-            document.getElementById('searchInput').value = '';
-            renderChannelTable(originChannelData);
-        }
-
-        function addChannel() {
-            const group = document.getElementById('groupSelect').value;
-            const name = document.getElementById('channelName').value.trim();
-            const url = document.getElementById('channelUrl').value.trim();
-            if (!group) {
-                alert('请先选择分组');
-                return;
-            }
-            if (!name || !url) {
-                alert('请填写频道名称和链接');
-                return;
-            }
-            iptvData.data[group].push({ name, url });
-            saveData();
-            loadGroupData();
-            document.getElementById('channelName').value = '';
-            document.getElementById('channelUrl').value = '';
-        }
-
-        function editChannel(index) {
-            const group = document.getElementById('groupSelect').value;
-            const item = originChannelData[index];
-            document.getElementById('channelName').value = item.name;
-            document.getElementById('channelUrl').value = item.url;
-            document.querySelector('.sidebar .btn:nth-child(6)').onclick = function() {
-                const newName = document.getElementById('channelName').value.trim();
-                const newUrl = document.getElementById('channelUrl').value.trim();
-                if (!newName || !newUrl) {
-                    alert('请填写完整信息');
-                    return;
-                }
-                iptvData.data[group][index] = { name: newName, url: newUrl };
-                saveData();
-                loadGroupData();
-                document.getElementById('channelName').value = '';
-                document.getElementById('channelUrl').value = '';
-                document.querySelector('.sidebar .btn:nth-child(6)').onclick = addChannel;
-            };
-        }
-
-        function deleteChannel(index) {
-            const group = document.getElementById('groupSelect').value;
-            if (confirm('确定删除该频道吗？')) {
-                iptvData.data[group].splice(index, 1);
-                saveData();
-                loadGroupData();
-            }
-        }
-
-        function batchReplace() {
-            const group = document.getElementById('groupSelect').value;
-            const oldPrefix = document.getElementById('oldPrefix').value.trim();
-            const newPrefix = document.getElementById('newPrefix').value.trim();
-            if (!group || !oldPrefix) {
-                alert('请选择分组并填写旧链接前缀');
-                return;
-            }
-            iptvData.data[group] = iptvData.data[group].map(item => ({
-                name: item.name,
-                url: item.url.replace(oldPrefix, newPrefix)
-            }));
-            saveData();
-            loadGroupData();
-            alert('批量替换完成！');
-        }
-
-        function importBatch() {
-            const group = document.getElementById('groupSelect').value;
-            const content = document.getElementById('batchImport').value.trim();
-            if (!group || !content) {
-                alert('请选择分组并填写导入内容');
-                return;
-            }
-            const lines = content.split('\n');
-            const channels = [];
-            lines.forEach(line => {
-                const [name, url] = line.split(',').map(item => item.trim());
-                if (name && url) {
-                    channels.push({ name, url });
-                }
-            });
-            iptvData.data[group] = [...iptvData.data[group], ...channels];
-            saveData();
-            loadGroupData();
-            document.getElementById('batchImport').value = '';
-            alert(`成功导入 ${channels.length} 个频道！`);
-        }
-
-        function exportM3U() {
-            const group = document.getElementById('groupSelect').value;
-            if (!group || !iptvData.data[group].length) {
-                alert('当前分组无数据');
-                return;
-            }
-            let m3uContent = '#EXTM3U\n';
-            iptvData.data[group].forEach(item => {
-                m3uContent += `#EXTINF:-1,${item.name}\n${item.url}\n`;
-            });
-            downloadFile(`${group}.m3u`, m3uContent);
-        }
-
-        function exportTXT() {
-            const group = document.getElementById('groupSelect').value;
-            if (!group || !iptvData.data[group].length) {
-                alert('当前分组无数据');
-                return;
-            }
-            let txtContent = '';
-            iptvData.data[group].forEach(item => {
-                txtContent += `${item.name},${item.url}\n`;
-            });
-            downloadFile(`${group}.txt`, txtContent);
-        }
-
-        function clearAllData() {
-            if (confirm('确定清空所有数据吗？此操作不可恢复！')) {
-                iptvData = { groups: [], data: {} };
-                saveData();
-                loadGroupSelect();
-                renderSortableGroupList();
-                loadGroupData();
-            }
-        }
-
-        function saveData() {
-            localStorage.setItem('iptvData', JSON.stringify(iptvData));
-        }
-
-        function downloadFile(filename, content) {
-            const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+            const isM3U8 = textarea.value.includes('#EXT-X-MEDIA-SEQUENCE');
+            const fileName = isM3U8 ? 'channel.m3u8' : 'litv_iptv.m3u';
+            const blob = new Blob([textarea.value], { type: 'application/octet-stream' });
+            const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
-            a.href = URL.createObjectURL(blob);
-            a.download = filename;
+            a.href = url;
+            a.download = fileName;
             a.click();
-            URL.revokeObjectURL(a.href);
+            URL.revokeObjectURL(url);
+            alert(`已下载 ${fileName}`);
         }
     </script>
 </body>
