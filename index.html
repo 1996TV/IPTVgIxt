@@ -2,173 +2,96 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>IPTV 工具集 · 完整版</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>IPTV 工具 · 天花板版</title>
+
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
 
 <style>
-*{box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,PingFang SC,Arial}
-body{margin:0;padding:14px;background:#f5f5f5}
-.tab{display:flex;gap:10px;margin-bottom:14px}
-.tab button{flex:1;padding:12px;border:0;border-radius:8px;background:#e5e5e5;font-size:15px}
-.tab button.active{background:#1677ff;color:#fff}
-.panel{display:none;background:#fff;border-radius:12px;padding:14px}
-.panel.active{display:block}
-input,textarea,button{width:100%;margin-top:8px;padding:10px;border-radius:8px;border:1px solid #ddd}
-textarea{min-height:180px}
-button{background:#1677ff;color:#fff;border:0}
-button.green{background:#52c41a}
-button.red{background:#ff4d4f}
-.row{display:flex;gap:8px;flex-wrap:wrap}
-.row button{flex:1}
-.logo-item{display:flex;gap:10px;align-items:center;padding:8px;border-bottom:1px solid #eee}
-.logo-item img{width:60px;height:30px;object-fit:contain;cursor:pointer}
-.logo-modal{position:fixed;inset:0;background:rgba(0,0,0,.8);display:none;align-items:center;justify-content:center;z-index:9}
-.logo-modal img{max-width:90%;max-height:80%}
-.tip{font-size:12px;color:#666;margin-top:6px}
+body{margin:0;background:#111;color:#fff;font-family:-apple-system,BlinkMacSystemFont,PingFang SC}
+header{padding:12px;background:#1677ff;text-align:center;font-weight:600}
+textarea,input,button{width:100%;margin-top:8px;padding:10px;border-radius:6px;border:0}
+button{background:#1677ff;color:#fff}
+#main{padding:12px}
+#player{width:100%;height:220px;background:#000;margin-top:10px}
+.channel{display:flex;align-items:center;gap:8px;padding:6px;border-bottom:1px solid #333;cursor:pointer}
+.channel img{width:48px;height:24px;object-fit:contain}
+.group{margin-top:10px;font-weight:600;color:#0af}
 </style>
 </head>
 
 <body>
 
-<div class="tab">
-<button class="active" onclick="switchTab(this,'iptv')">IPTV 转换</button>
-<button onclick="switchTab(this,'logo')">LOGO 搜索</button>
-</div>
+<header>IPTV 工具 · 天花板版</header>
 
-<!-- IPTV -->
-<div id="iptv" class="panel active">
-<h3>IPTV 文件转换</h3>
+<div id="main">
 
-<input id="epg" value="https://epg.catvod.com/epg.xml">
-<input id="logoBase" value="https://cdn.jsdelivr.net/gh/1996TV/LOGO@main/">
+<textarea id="input" placeholder="粘贴 M3U"></textarea>
+<button onclick="parseM3u()">解析频道列表</button>
+<button onclick="genLink()">生成在线播放链接</button>
 
-<input id="cleanKeys" placeholder="自定义净化词，用逗号分隔 如：测试,备用">
+<input id="playLink" placeholder="在线播放链接" readonly>
 
-<label><input type="checkbox" id="cleanName" checked> 净化频道名</label><br>
-<label><input type="checkbox" id="removeReplay" checked> 去回看 / 回放 / 时移</label>
+<video id="player" controls></video>
 
-<input id="oldPrefix" placeholder="旧链接前缀">
-<input id="newPrefix" placeholder="新链接前缀">
-<label><input type="checkbox" id="enableReplace" checked> 启用链接替换</label>
+<div id="list"></div>
 
-<textarea id="content" placeholder="粘贴 TXT / M3U"></textarea>
-
-<div class="row">
-<button onclick="txtToM3u()">TXT → M3U</button>
-<button onclick="m3uToTxt()">M3U → TXT</button>
-<button onclick="replaceLink()">只替换链接</button>
-</div>
-
-<div class="row">
-<button class="green" onclick="download()">下载 M3U</button>
-<button class="red" onclick="clearAll()">清空</button>
-</div>
-
-<div class="tip">✔ 可直接用于 PotPlayer / TVBox / iOS 播放器</div>
-</div>
-
-<!-- LOGO -->
-<div id="logo" class="panel">
-<h3>LOGO 模糊搜索（稳定版）</h3>
-<input id="logoKey" placeholder="CCTV / 卫视 / 4K">
-<button onclick="searchLogo()">搜索</button>
-<div id="logoList"></div>
-</div>
-
-<div class="logo-modal" id="modal" onclick="this.style.display='none'">
-<img id="modalImg">
 </div>
 
 <script>
-const LOGO_INDEX = "https://cdn.jsdelivr.net/gh/1996TV/LOGO@main/index.json";
-const DEFAULT_CLEAN = ["高清","HD","超清"];
-let logos=[];
+let channels=[];
 
-function switchTab(btn,id){
-document.querySelectorAll('.tab button').forEach(b=>b.classList.remove('active'));
-document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
-btn.classList.add('active');
-document.getElementById(id).classList.add('active');
-}
-
-function esc(s){return s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');}
-
-function txtToM3u(){
-let epg=epgUrl(),logo=logoUrl();
-let keys=[...DEFAULT_CLEAN,...customKeys()];
-let out=`#EXTM3U x-tvg-url="${epg}"\n`;
-let group='';
-content().split('\n').forEach(l=>{
-l=l.trim();if(!l)return;
-if(l.endsWith(',#genre#')){group=l.replace(',#genre#','');return;}
-if(!l.includes(','))return;
-let [name,url]=l.split(',');
-if(cleanName.checked)keys.forEach(k=>name=name.replace(k,''));
-if(removeReplay.checked && /回看|回放|时移/i.test(name))return;
-if(enableReplace.checked && oldPrefix.value && newPrefix.value)
-url=url.replace(new RegExp(esc(oldPrefix.value),'g'),newPrefix.value);
-out+=`#EXTINF:-1 tvg-name="${name}" tvg-logo="${logo}${name}.png" group-title="${group}",${name}\n${url}\n`;
-});
-setContent(out);
-}
-
-function m3uToTxt(){
-let name='',group='',out='';
-content().split('\n').forEach(l=>{
+function parseM3u(){
+channels=[];
+list.innerHTML='';
+let lines=input.value.split('\n');
+let group='',name='',logo='',url='';
+lines.forEach(l=>{
 if(l.startsWith('#EXTINF')){
+group=(l.match(/group-title="([^"]+)"/)||[])[1]||'未分类';
 name=l.split(',').pop();
-let g=l.match(/group-title="([^"]+)"/);
-if(g && !out.includes(g[1]+',#genre#')) out+=`${g[1]},#genre#\n`;
+logo=(l.match(/tvg-logo="([^"]+)"/)||[])[1];
 }else if(l && !l.startsWith('#')){
-out+=`${name},${l}\n`;
+channels.push({group,name,logo,url:l});
 }
 });
-setContent(out);
+render();
 }
 
-function replaceLink(){
-if(!oldPrefix.value||!newPrefix.value)return alert('请填写新旧前缀');
-setContent(content().replace(new RegExp(esc(oldPrefix.value),'g'),newPrefix.value));
+function render(){
+let g='';
+channels.forEach(c=>{
+if(c.group!==g){
+g=c.group;
+list.innerHTML+=`<div class="group">${g}</div>`;
 }
-
-function download(){
-let b=new Blob([content()]);
-let a=document.createElement('a');
-a.href=URL.createObjectURL(b);
-a.download='iptv.m3u';
-a.click();
-}
-
-function clearAll(){setContent('');}
-
-function content(){return document.getElementById('content').value;}
-function setContent(v){document.getElementById('content').value=v;}
-function epgUrl(){return epg.value}
-function logoUrl(){return logoBase.value.replace(/\/$/,'/')}
-function customKeys(){return cleanKeys.value.split(',').map(i=>i.trim()).filter(i=>i)}
-
-async function searchLogo(){
-if(!logos.length)logos=await fetch(LOGO_INDEX).then(r=>r.json());
-let k=logoKey.value.toLowerCase();
-logoList.innerHTML=logos.filter(n=>n.toLowerCase().includes(k)).map(n=>{
-let u=logoUrl()+n;
-return `<div class="logo-item">
-<img src="${u}" onclick="preview('${u}')">
-<div>${n}</div>
-<button onclick="copy('${u}')">复制</button>
+list.innerHTML+=`
+<div class="channel" onclick="play('${c.url}')">
+<img src="${c.logo||''}">
+<span>${c.name}</span>
 </div>`;
-}).join('');
+});
 }
 
-function preview(u){
-modalImg.src=u;
-modal.style.display='flex';
+function play(url){
+let v=document.getElementById('player');
+if(Hls.isSupported() && url.includes('.m3u8')){
+let hls=new Hls();
+hls.loadSource(url);
+hls.attachMedia(v);
+}else{
+v.src=url;
+}
+v.play();
 }
 
-function copy(t){
-navigator.clipboard.writeText(t);
-alert('已复制');
+async function genLink(){
+let body=new URLSearchParams({text:input.value,edit_code:''});
+let r=await fetch('https://rentry.co/api/new',{method:'POST',body});
+let j=await r.json();
+playLink.value=`https://rentry.co/${j.url}/raw`;
 }
 </script>
+
 </body>
 </html>
