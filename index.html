@@ -2,8 +2,9 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>国内IPTV直播源生成器（完整版）</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="format-detection" content="telephone=no">
+    <title>IPTV工具集 - M3U生成与在线播放</title>
     <style>
         * {
             margin: 0;
@@ -13,48 +14,212 @@
         }
         body {
             background: #f5f5f5;
-            padding: 20px;
+            padding: 15px;
             max-width: 100%;
-        }
-        .container {
-            max-width: 800px;
             margin: 0 auto;
-            background: #fff;
-            padding: 25px;
-            border-radius: 12px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
         }
-        h1 {
-            font-size: 20px;
-            color: #333;
-            text-align: center;
-            margin-bottom: 20px;
-            font-weight: 600;
-        }
-        .filter-group {
+        .tab-group {
             display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-            margin-bottom: 15px;
+            gap: 10px;
+            margin-bottom: 20px;
+            width: 100%;
         }
-        .filter-btn {
-            padding: 6px 12px;
-            border: 1px solid #1677ff;
-            border-radius: 4px;
-            background: #fff;
-            color: #1677ff;
+        .tab-btn {
+            flex: 1;
+            padding: 12px 0;
+            border: none;
+            border-radius: 8px;
+            background: #e5e5e5;
+            color: #333;
+            font-size: 16px;
+            font-weight: 500;
             cursor: pointer;
-            font-size: 12px;
+            transition: all 0.3s;
+            box-shadow: 0 3px 0 #ccc, 0 4px 6px rgba(0,0,0,0.1);
+            position: relative;
+            top: 0;
         }
-        .filter-btn.active {
+        .tab-btn.active {
             background: #1677ff;
             color: #fff;
+            box-shadow: 0 3px 0 #0f5ccc, 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .panel-container {
+            width: 100%;
+        }
+        .panel {
+            display: none;
+            background: #fff;
+            padding: 20px 15px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,.08);
+        }
+        .panel.active {
+            display: block;
+        }
+        h1 {
+            font-size: 18px;
+            text-align: center;
+            margin-bottom: 20px;
+            color: #333;
+            font-weight: 600;
+        }
+        .logo-search {
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #eee;
+        }
+        .search-bar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            width: 100%;
+        }
+        .search-bar input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+        .search-bar button {
+            padding: 0 20px;
+            background: #1677ff;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            white-space: nowrap;
+            box-shadow: 0 3px 0 #0f5ccc, 0 4px 6px rgba(0,0,0,0.1);
+            position: relative;
+            top: 0;
+            transition: all 0.15s ease;
+            user-select: none;
+        }
+        .loading {
+            text-align: center;
+            color: #1677ff;
+            font-size: 14px;
+            padding: 20px;
+            display: none;
+        }
+        .logo-result {
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #eee;
+            border-radius: 8px;
+            padding: 10px;
+            display: none;
+        }
+        .logo-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px;
+            border-bottom: 1px solid #f5f5f5;
+            cursor: pointer;
+        }
+        .logo-item:hover {
+            background: #f0f7ff;
+        }
+        .logo-item .preview {
+            width: 60px;
+            height: 30px;
+            border: 1px solid #eee;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+        .logo-item .preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+        .logo-item .info {
+            flex: 1;
+        }
+        .logo-item .name {
+            font-size: 14px;
+            color: #333;
+            margin-bottom: 4px;
+        }
+        .logo-item .url {
+            font-size: 12px;
+            color: #666;
+            word-break: break-all;
+        }
+        .logo-item .copy-btn {
+            padding: 4px 12px;
+            font-size: 12px;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            white-space: nowrap;
+            background: #1677ff;
+            box-shadow: 0 2px 0 #0f5ccc, 0 3px 5px rgba(0,0,0,0.1);
+            position: relative;
+            top: 0;
+            transition: all 0.15s ease;
+            user-select: none;
+        }
+        .input-item {
+            margin-bottom: 15px;
+            width: 100%;
+        }
+        .input-item label {
+            font-size: 14px;
+            color: #555;
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 500;
+        }
+        .input-item .title-blue {
+            color: #1677ff;
+            font-weight: 700;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background: #fafafa;
+            font-size: 14px;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: #1677ff;
+            box-shadow: 0 0 0 2px rgba(22, 119, 255, 0.1);
+        }
+        #epgUrl, #logoUrlInput {
+            color: #1677ff;
+        }
+        textarea {
+            min-height: 180px;
+            resize: vertical;
+            line-height: 1.5;
+        }
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            margin: 10px 0;
+            font-size: 14px;
+            color: #555;
+        }
+        .checkbox-item input {
+            margin-right: 8px;
+            width: 18px;
+            height: 18px;
         }
         .btn-group {
             display: flex;
-            gap: 10px;
-            margin-bottom: 25px;
+            gap: 8px;
+            margin: 15px 0;
             flex-wrap: wrap;
+            width: 100%;
         }
         button {
             flex: 1;
@@ -65,216 +230,517 @@
             color: #fff;
             cursor: pointer;
             font-size: 14px;
-            transition: all 0.2s;
+            transition: all 0.15s ease;
+            user-select: none;
+            box-shadow: 0 3px 0 #0f5ccc, 0 4px 6px rgba(0,0,0,0.1);
+            position: relative;
+            top: 0;
         }
-        button:hover {
+        button:active {
+            transform: scale(0.96);
             opacity: 0.9;
+            box-shadow: 0 1px 0 #0f5ccc, 0 2px 3px rgba(0,0,0,0.1);
+            top: 2px;
         }
-        button.gray {
-            background: #666;
+        button.green {
+            background: #52c41a;
+            box-shadow: 0 3px 0 #389e0d, 0 4px 6px rgba(0,0,0,0.1);
         }
-        textarea {
+        button.red {
+            background: #ff4d4f;
+            box-shadow: 0 3px 0 #d9363e, 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .func-btn {
+            display: flex;
+            gap: 8px;
+            margin: 15px 0;
+            flex-wrap: wrap;
             width: 100%;
-            height: 300px;
-            padding: 15px;
+        }
+        .upload {
+            margin: 15px 0;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            justify-content: flex-start;
+        }
+        .upload input[type="file"] {
+            display: none;
+        }
+        .upload-label {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 120px;
+            height: 40px;
+            border-radius: 8px;
+            background-color: #1677ff;
+            color: #fff;
+            font-size: 14px;
+            cursor: pointer;
+            box-shadow: 0 3px 0 #0f5ccc, 0 4px 6px rgba(0,0,0,0.15);
+            position: relative;
+            top: 0;
+            transition: all 0.15s ease;
+            user-select: none;
+        }
+        .upload-label:active {
+            box-shadow: 0 1px 0 #0f5ccc, 0 2px 4px rgba(0,0,0,0.1);
+            top: 2px;
+            transform: scale(0.98);
+        }
+        .file-name {
+            font-size: 14px;
+            color: #666;
+            padding: 8px 12px;
             border: 1px solid #ddd;
             border-radius: 8px;
-            font-size: 12px;
-            line-height: 1.5;
-            resize: vertical;
-            margin-bottom: 15px;
             background: #fafafa;
+            min-width: 200px;
+            max-width: 100%;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
-        .channel-list {
-            max-height: 200px;
-            overflow-y: auto;
-            border: 1px solid #eee;
-            border-radius: 8px;
-            margin-bottom: 20px;
+        .file-name:empty::before {
+            content: "未选择文件";
+            color: #999;
         }
-        .channel-item {
-            padding: 10px 15px;
-            border-bottom: 1px solid #f5f5f5;
-            cursor: pointer;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .channel-item:last-child {
-            border-bottom: none;
-        }
-        .channel-item:hover {
-            background: #e8f4ff;
-        }
-        .channel-name {
-            font-size: 14px;
-            color: #333;
-        }
-        .channel-id {
+        .download-tip {
             font-size: 12px;
             color: #666;
-            font-family: monospace;
-        }
-        .tip {
-            font-size: 12px;
-            color: #999;
             text-align: center;
             margin-top: 10px;
-            line-height: 1.6;
+            line-height: 1.4;
         }
-        .warning {
-            background: #fff2f2;
-            color: #ff4d4f;
-            padding: 10px 15px;
-            border-radius: 8px;
+        .custom-clean-tip {
             font-size: 12px;
-            margin-bottom: 20px;
-            line-height: 1.5;
+            color: #999;
+            margin-top: 4px;
+        }
+        .logo-preview-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            padding: 20px;
+        }
+        .logo-preview-content {
+            max-width: 90%;
+            max-height: 80%;
+            position: relative;
+        }
+        .logo-preview-img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            border-radius: 8px;
+        }
+        .logo-preview-close {
+            position: absolute;
+            top: -15px;
+            right: -15px;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: #ff4d4f;
+            color: #fff;
+            border: none;
+            font-size: 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 0 #d9363e, 0 3px 5px rgba(0,0,0,0.2);
+            position: relative;
+            top: 0;
+            transition: all 0.15s ease;
+        }
+        .logo-preview-close:active {
+            box-shadow: 0 1px 0 #d9363e, 0 2px 3px rgba(0,0,0,0.2);
+            top: 1px;
+        }
+        /* 链接结果样式 */
+        .link-result {
+            margin-top: 15px;
+            padding: 12px;
+            border: 1px solid #1677ff;
+            border-radius: 8px;
+            background: #f0f7ff;
+            display: none;
+        }
+        .link-result p {
+            font-size: 14px;
+            color: #333;
+            margin-bottom: 8px;
+        }
+        .link-result input {
+            font-size: 13px;
+            color: #1677ff;
+            margin-bottom: 8px;
+        }
+        .link-result .copy-link-btn {
+            width: 100%;
+            background: #1677ff;
+            color: #fff;
+            border: none;
+            padding: 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>国内IPTV直播源生成器（完整版）</h1>
+    <div class="tab-group">
+        <button class="tab-btn active" onclick="switchTab('iptv-panel')">IPTV文件转换</button>
+        <button class="tab-btn" onclick="switchTab('logo-panel')">LOGO模糊搜索</button>
+    </div>
 
-        <div class="warning">
-            ⚠️ 重要提示：使用国内公开源，无需代理直连！生成后直接导入播放器即可。
+    <div class="panel-container">
+        <div class="panel" id="logo-panel">
+            <h1>IPTV工具集 - LOGO模糊搜索</h1>
+            <div class="logo-search">
+                <h3>频道LOGO模糊搜索</h3>
+                <div class="search-bar">
+                    <input type="text" id="searchKey" placeholder="输入关键词（如CCTV、4K、BBC）">
+                    <button onclick="fuzzySearchLogo()">模糊搜索</button>
+                </div>
+                <div class="loading" id="loading">正在拉取LOGO列表...</div>
+                <div id="logoResult" class="logo-result"></div>
+            </div>
         </div>
 
-        <div class="filter-group">
-            <button class="filter-btn active" onclick="filterChannel('all')">全部频道</button>
-            <button class="filter-btn" onclick="filterChannel('cctv')">央视</button>
-            <button class="filter-btn" onclick="filterChannel('satellite')">卫视</button>
-            <button class="filter-btn" onclick="filterChannel('local')">地方台</button>
+        <div class="panel active" id="iptv-panel">
+            <h1>IPTV工具集 - M3U生成与在线播放</h1>
+            <div class="input-item">
+                <label class="title-blue">EPG 地址</label>
+                <input id="epgUrl" placeholder="请输入EPG地址" value="https://epg.catvod.com/epg.xml">
+            </div>
+            <div class="input-item">
+                <label class="title-blue">Logo 基础地址（结尾 /）</label>
+                <input id="logoUrlInput" placeholder="请输入Logo基础地址" value="https://cdn.jsdelivr.net/gh/1996TV/LOGO@main/">
+            </div>
+            <div class="input-item">
+                <label>自定义净化关键词</label>
+                <input id="customCleanKeywords" placeholder="多个关键词用英文逗号分隔，如:测试,备用,无效">
+                <div class="custom-clean-tip">提示：输入后会和默认关键词（高清|HD|超清）一起过滤频道名</div>
+            </div>
+            <div class="checkbox-item">
+                <input type="checkbox" id="cleanName" checked>
+                <label>净化频道名</label>
+            </div>
+            <div class="checkbox-item">
+                <input type="checkbox" id="removeReplay" checked>
+                <label>去除回看 / 回放 / 时移频道</label>
+            </div>
+            <div class="input-item">
+                <label class="title-blue">旧链接前缀</label>
+                <input id="oldLinkPrefix" placeholder="如http://old.com/">
+            </div>
+            <div class="input-item">
+                <label class="title-blue">新链接前缀</label>
+                <input id="newLinkPrefix" placeholder="如http://new.com/">
+            </div>
+            <div class="checkbox-item">
+                <input type="checkbox" id="enableLinkReplace" checked>
+                <label>启用链接替换（转换文件时自动生效）</label>
+            </div>
+            
+            <div class="upload">
+                <label for="fileInput" class="upload-label">上传文件</label>
+                <input type="file" id="fileInput" accept=".txt,.m3u,.m3u8" onchange="readFile(this)">
+                <div class="file-name" id="fileNameDisplay"></div>
+            </div>
+
+            <textarea id="inputContent" placeholder="粘贴或上传 TXT / M3U 内容"></textarea>
+            <div class="btn-group">
+                <button onclick="txtToM3u()">TXT → M3U</button>
+                <button onclick="m3uToTxt()">M3U → TXT</button>
+                <button onclick="onlyReplaceLink()">只替换链接</button>
+                <button class="red" onclick="clearAll()">清空内容</button>
+            </div>
+            <div class="func-btn">
+                <button class="green" onclick="downloadResult()">下载M3U文件</button>
+                <button onclick="copyContent()">复制当前内容</button>
+                <button onclick="generateM3uLink()">生成在线播放链接</button>
+            </div>
+            <div class="download-tip">安卓手机请开启浏览器存储权限 | iOS用户可复制内容到备忘录保存</div>
+            
+            <div class="link-result" id="linkResult">
+                <p>✅ M3U在线播放链接（可直接填入播放器）：</p>
+                <input type="text" id="m3uLink" readonly>
+                <button class="copy-link-btn" onclick="copyM3uLink()">复制播放链接</button>
+                <p style="font-size:12px;color:#666;">提示：链接永久有效，可直接用于播放器</p>
+            </div>
         </div>
+    </div>
 
-        <div class="btn-group">
-            <button onclick="generateFullM3U()">生成完整 M3U 播放列表</button>
-            <button onclick="copyResult()" class="gray">复制结果</button>
-            <button onclick="downloadResult()" class="gray">下载文件</button>
-        </div>
-
-        <div class="channel-list" id="channelList">
-            <!-- 频道列表由JS生成 -->
-        </div>
-
-        <textarea id="resultArea" placeholder="生成的播放源内容会显示在这里..."></textarea>
-
-        <div class="tip">
-            1. 支持频道分类筛选，点击频道可生成单个频道链接<br>
-            2. 推荐播放器：VLC、Kodi、Perfect Player<br>
-            3. 搭配EPG源 https://epg.51zmt.top:8000/e.xml.gz 可显示节目单
+    <div class="logo-preview-modal" id="logoPreviewModal">
+        <div class="logo-preview-content">
+            <img src="" alt="LOGO预览" class="logo-preview-img" id="previewImg">
+            <button class="logo-preview-close" onclick="closeLogoPreview()">×</button>
         </div>
     </div>
 
     <script>
-        // 核心配置：频道+公开源地址+分类+LOGO匹配
-        const CHANNELS = {
-            // 央视系列 - 分类标识 cctv
-            "cctv1": ["cctv", "https://live.fanmingming.com/tv/m3u/itv.m3u", "CCTV-1 综合", "https://picsum.photos/id/1/32/32"],
-            "cctv2": ["cctv", "https://live.fanmingming.com/tv/m3u/itv.m3u", "CCTV-2 财经", "https://picsum.photos/id/2/32/32"],
-            "cctv3": ["cctv", "https://live.fanmingming.com/tv/m3u/itv.m3u", "CCTV-3 综艺", "https://picsum.photos/id/3/32/32"],
-            "cctv5": ["cctv", "https://live.fanmingming.com/tv/m3u/itv.m3u", "CCTV-5 体育", "https://picsum.photos/id/4/32/32"],
-            "cctv5p": ["cctv", "https://live.fanmingming.com/tv/m3u/itv.m3u", "CCTV-5+ 体育赛事", "https://picsum.photos/id/5/32/32"],
-            "cctv6": ["cctv", "https://live.fanmingming.com/tv/m3u/itv.m3u", "CCTV-6 电影", "https://picsum.photos/id/6/32/32"],
-            "cctv8": ["cctv", "https://live.fanmingming.com/tv/m3u/itv.m3u", "CCTV-8 电视剧", "https://picsum.photos/id/7/32/32"],
-            "cctv13": ["cctv", "https://live.fanmingming.com/tv/m3u/itv.m3u", "CCTV-13 新闻", "https://picsum.photos/id/8/32/32"],
-            "cctv14": ["cctv", "https://live.fanmingming.com/tv/m3u/itv.m3u", "CCTV-14 少儿", "https://picsum.photos/id/9/32/32"],
-            // 卫视系列 - 分类标识 satellite
-            "hunan": ["satellite", "https://live.fanmingming.com/tv/m3u/itv.m3u", "湖南卫视", "https://picsum.photos/id/10/32/32"],
-            "zhejiang": ["satellite", "https://live.fanmingming.com/tv/m3u/itv.m3u", "浙江卫视", "https://picsum.photos/id/11/32/32"],
-            "jiangsu": ["satellite", "https://live.fanmingming.com/tv/m3u/itv.m3u", "江苏卫视", "https://picsum.photos/id/12/32/32"],
-            "dragon": ["satellite", "https://live.fanmingming.com/tv/m3u/itv.m3u", "东方卫视", "https://picsum.photos/id/13/32/32"],
-            "guangdong": ["satellite", "https://live.fanmingming.com/tv/m3u/itv.m3u", "广东卫视", "https://picsum.photos/id/14/32/32"],
-            "beijing": ["satellite", "https://live.fanmingming.com/tv/m3u/itv.m3u", "北京卫视", "https://picsum.photos/id/15/32/32"],
-            // 地方台系列 - 分类标识 local
-            "shanghai": ["local", "https://live.fanmingming.com/tv/m3u/itv.m3u", "上海新闻综合", "https://picsum.photos/id/16/32/32"],
-            "guangzhou": ["local", "https://live.fanmingming.com/tv/m3u/itv.m3u", "广州综合", "https://picsum.photos/id/17/32/32"],
-            "suzhou": ["local", "https://live.fanmingming.com/tv/m3u/itv.m3u", "苏州新闻综合", "https://picsum.photos/id/18/32/32"],
-            "chengdu": ["local", "https://live.fanmingming.com/tv/m3u/itv.m3u", "成都新闻综合", "https://picsum.photos/id/19/32/32"]
-        };
+        const repoOwner = "1996TV";
+        const repoName = "LOGO";
+        const cdnBase = `https://cdn.jsdelivr.net/gh/${repoOwner}/${repoName}@main/`;
+        let allLogoFiles = [];
+        const DEFAULT_EPG_URL = "https://epg.catvod.com/epg.xml";
+        const DEFAULT_LOGO_URL = cdnBase;
+        const DEFAULT_CLEAN_KEYWORDS = ["高清", "HD", "超清"];
+        let currentM3uContent = "";
 
-        // 页面加载渲染全部频道
-        window.onload = function() {
-            renderChannelList('all');
-        };
-
-        // 渲染频道列表（支持分类筛选）
-        function renderChannelList(type) {
-            const listEl = document.getElementById('channelList');
-            let html = '';
-            for (const [id, [category, url, name, logo]] of Object.entries(CHANNELS)) {
-                if (type !== 'all' && category !== type) continue;
-                html += `
-                <div class="channel-item" onclick="generateSingleChannel('${id}')">
-                    <span class="channel-name">${name}</span>
-                    <span class="channel-id">${id}</span>
-                </div>
-                `;
-            }
-            listEl.innerHTML = html;
-        }
-
-        // 分类筛选按钮样式切换
-        function filterChannel(type) {
-            const btns = document.querySelectorAll('.filter-btn');
-            btns.forEach(btn => btn.classList.remove('active'));
+        function switchTab(panelId) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.panel').forEach(panel => panel.classList.remove('active'));
             event.target.classList.add('active');
-            renderChannelList(type);
+            document.getElementById(panelId).classList.add('active');
         }
 
-        // 生成完整M3U播放列表（带LOGO和分类）
-        function generateFullM3U() {
-            let m3u = "#EXTM3U\n";
-            for (const [id, [category, url, name, logo]] of Object.entries(CHANNELS)) {
-                m3u += `#EXTINF:-1 tvg-id="${id}" tvg-name="${name}" tvg-logo="${logo}" group-title="${category === 'cctv' ? '央视' : category === 'satellite' ? '卫视' : '地方台'}",${name}\n`;
-                m3u += `${url}\n`;
-            }
-            document.getElementById('resultArea').value = m3u;
-            alert(`已生成 ${Object.keys(CHANNELS).length} 个国内精选频道 M3U 列表`);
+        function readFile(input) {
+            const file = input.files[0];
+            if (!file) return;
+            document.getElementById('fileNameDisplay').textContent = file.name;
+            const reader = new FileReader();
+            reader.onload = e => {
+                document.getElementById('inputContent').value = e.target.result;
+            };
+            reader.readAsText(file);
         }
 
-        // 生成单个频道链接
-        function generateSingleChannel(id) {
-            const [category, url, name, logo] = CHANNELS[id];
-            const singleM3u = `#EXTM3U\n#EXTINF:-1 tvg-id="${id}" tvg-name="${name}" tvg-logo="${logo}" group-title="${category === 'cctv' ? '央视' : category === 'satellite' ? '卫视' : '地方台'}",${name}\n${url}`;
-            document.getElementById('resultArea').value = singleM3u;
-            alert(`已生成【${name}】的播放链接`);
-        }
+        function txtToM3u() {
+            const epg = document.getElementById('epgUrl').value.trim();
+            const logoBase = document.getElementById('logoUrlInput').value.trim().replace(/\/$/, '') + '/';
+            const input = document.getElementById('inputContent').value.trim();
+            if (!input) return alert('请输入或上传内容！');
+            
+            const lines = input.split('\n');
+            let output = `#EXTM3U x-tvg-url="${epg}"\n`;
+            let currentGroup = '';
+            const customKeys = document.getElementById('customCleanKeywords').value.split(',').map(k => k.trim()).filter(k => k);
+            const cleanKeywords = [...DEFAULT_CLEAN_KEYWORDS, ...customKeys];
 
-        // 复制结果
-        function copyResult() {
-            const textarea = document.getElementById('resultArea');
-            if (!textarea.value) {
-                alert('暂无内容可复制！');
-                return;
-            }
-            textarea.select();
-            navigator.clipboard.writeText(textarea.value).then(() => {
-                alert('复制成功！直接导入播放器即可');
-            }).catch(() => {
-                document.execCommand('copy');
-                alert('复制成功！直接导入播放器即可');
+            lines.forEach(l => {
+                l = l.trim();
+                if (!l) return;
+                if (l.endsWith(',#genre#')) {
+                    currentGroup = l.replace(',#genre#', '');
+                    return;
+                }
+                if (!l.includes(',')) return;
+                const [name, url] = l.split(',');
+                let cleanName = name;
+                if (document.getElementById('cleanName').checked) {
+                    cleanKeywords.forEach(key => {
+                        cleanName = cleanName.replace(key, '');
+                    });
+                    cleanName = cleanName.replace(/^\s+|\s+$/g, '');
+                }
+                if (document.getElementById('removeReplay').checked && /回看|回放|时移|Replay|Catchup/i.test(cleanName)) {
+                    return;
+                }
+                let finalUrl = url;
+                if (document.getElementById('enableLinkReplace').checked) {
+                    const oldPrefix = document.getElementById('oldLinkPrefix').value.trim();
+                    const newPrefix = document.getElementById('newLinkPrefix').value.trim();
+                    if (oldPrefix && newPrefix) {
+                        finalUrl = finalUrl.replace(oldPrefix, newPrefix);
+                    }
+                }
+                output += `#EXTINF:-1 tvg-id="${cleanName}" tvg-name="${cleanName}" tvg-logo="${logoBase}${cleanName}.png" group-title="${currentGroup}",${cleanName}\n`;
+                output += `${finalUrl}\n`;
             });
+
+            document.getElementById('inputContent').value = output;
+            currentM3uContent = output;
         }
 
-        // 下载结果
-        function downloadResult() {
-            const textarea = document.getElementById('resultArea');
-            if (!textarea.value) {
-                alert('暂无内容可下载！');
-                return;
-            }
-            const fileName = `国内IPTV直播源_${new Date().getTime()}.m3u`;
-            const blob = new Blob([textarea.value], { type: 'application/octet-stream' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = fileName;
-            a.click();
-            URL.revokeObjectURL(url);
-            alert(`已下载 ${fileName}`);
+        function m3uToTxt() {
+            const input = document.getElementById('inputContent').value.trim();
+            if (!input) return alert('请输入或上传内容！');
+            
+            const lines = input.split('\n');
+            let output = '';
+            let currentGroup = '';
+            let currentName = '';
+
+            lines.forEach(line => {
+                line = line.trim();
+                if (!line) return;
+                if (line.startsWith('#EXTINF:')) {
+                    const groupMatch = line.match(/group-title="([^"]+)"/);
+                    const nameMatch = line.match(/,(.+)$/);
+                    if (groupMatch) currentGroup = groupMatch[1];
+                    if (nameMatch) currentName = nameMatch[1];
+                } else if (!line.startsWith('#')) {
+                    if (currentGroup && currentName) {
+                        if (!output.includes(`${currentGroup},#genre#`)) {
+                            output += `${currentGroup},#genre#\n`;
+                        }
+                        output += `${currentName},${line}\n`;
+                    }
+                }
+            });
+            document.getElementById('inputContent').value = output;
+            currentM3uContent = "";
         }
+
+        function onlyReplaceLink() {
+            const input = document.getElementById('inputContent').value.trim();
+            const oldPrefix = document.getElementById('oldLinkPrefix').value.trim();
+            const newPrefix = document.getElementById('newLinkPrefix').value.trim();
+            if (!input) return alert('请输入或上传内容！');
+            if (!oldPrefix || !newPrefix) return alert('请填写新旧链接前缀！');
+            
+            const output = input.replace(new RegExp(oldPrefix, 'g'), newPrefix);
+            document.getElementById('inputContent').value = output;
+            currentM3uContent = output;
+        }
+
+        function clearAll() {
+            document.getElementById('inputContent').value = '';
+            document.getElementById('fileNameDisplay').textContent = '';
+            document.getElementById('linkResult').style.display = 'none';
+            currentM3uContent = '';
+        }
+
+        // 下载文件名为iptv.m3u
+        function downloadResult() {
+            const content = document.getElementById('inputContent').value.trim();
+            if (!content) return alert('暂无内容可下载！');
+            const blob = new Blob([content], { type: 'text/plain' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = "iptv.m3u"; // 固定文件名为iptv.m3u
+            a.click();
+            URL.revokeObjectURL(a.href);
+        }
+
+        function copyContent() {
+            const content = document.getElementById('inputContent').value.trim();
+            if (!content) return alert('暂无内容可复制！');
+            const textarea = document.createElement('textarea');
+            textarea.value = content;
+            document.body.appendChild(textarea);
+            textarea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textarea);
+            alert('内容已复制到剪贴板！');
+        }
+
+        // 国内稳定版：生成在线播放链接
+        async function generateM3uLink() {
+            if (!currentM3uContent) return alert('请先生成M3U内容（点击 TXT→M3U 或粘贴M3U内容）！');
+            
+            try {
+                const response = await fetch('https://textbin.net/api/bin', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        content: currentM3uContent,
+                        title: "iptv.m3u",
+                        expire: 'never'
+                    })
+                });
+
+                const data = await response.json();
+                if (data.success && data.url) {
+                    const rawLink = `https://textbin.net/raw/${data.url.split('/').pop()}`;
+                    document.getElementById('m3uLink').value = rawLink;
+                    document.getElementById('linkResult').style.display = 'block';
+                } else {
+                    alert('链接生成失败，请稍后重试！');
+                }
+            } catch (error) {
+                alert('生成链接时出错：' + error.message);
+            }
+        }
+
+        function copyM3uLink() {
+            const linkInput = document.getElementById('m3uLink');
+            if (!linkInput.value) return alert('暂无播放链接可复制！');
+            linkInput.select();
+            document.execCommand('copy');
+            alert('播放链接已复制！');
+        }
+
+        async function fuzzySearchLogo() {
+            const key = document.getElementById('searchKey').value.trim().toLowerCase();
+            if (!key) return alert('请输入搜索关键词！');
+            const loading = document.getElementById('loading');
+            const resultBox = document.getElementById('logoResult');
+            loading.style.display = 'block';
+            resultBox.style.display = 'none';
+
+            try {
+                if (allLogoFiles.length === 0) {
+                    const response = await fetch(`https://api.github.com/repos/${repoOwner}/${repoName}/contents/`);
+                    if (!response.ok) throw new Error('获取LOGO列表失败');
+                    allLogoFiles = await response.json();
+                }
+                const filtered = allLogoFiles.filter(file => 
+                    file.name.toLowerCase().includes(key) && file.name.endsWith('.png')
+                );
+                loading.style.display = 'none';
+                resultBox.style.display = 'block';
+                resultBox.innerHTML = filtered.length === 0 
+                    ? '<p style="text-align:center; color:#999;">未找到匹配的LOGO</p>'
+                    : filtered.map(file => `
+                        <div class="logo-item">
+                            <div class="preview">
+                                <img src="${file.download_url}" alt="${file.name}">
+                            </div>
+                            <div class="info">
+                                <div class="name">${file.name}</div>
+                                <div class="url">${file.download_url}</div>
+                            </div>
+                            <button class="copy-btn" onclick="copyLogoUrl('${file.download_url}')">复制链接</button>
+                        </div>
+                    `).join('');
+            } catch (err) {
+                loading.style.display = 'none';
+                alert(err.message);
+            }
+        }
+
+        function copyLogoUrl(url) {
+            const textarea = document.createElement('textarea');
+            textarea.value = url;
+            document.body.appendChild(textarea);
+            textarea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textarea);
+            alert('LOGO链接已复制！');
+        }
+
+        function openLogoPreview(imgUrl) {
+            const modal = document.getElementById('logoPreviewModal');
+            const previewImg = document.getElementById('previewImg');
+            previewImg.src = imgUrl;
+            modal.style.display = 'flex';
+        }
+
+        function closeLogoPreview() {
+            document.getElementById('logoPreviewModal').style.display = 'none';
+        }
+
+        window.onload = function() {
+            document.getElementById('epgUrl').value = DEFAULT_EPG_URL;
+            document.getElementById('logoUrlInput').value = DEFAULT_LOGO_URL;
+            clearAll();
+        };
     </script>
 </body>
 </html>
