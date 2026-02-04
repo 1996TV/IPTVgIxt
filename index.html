@@ -1,535 +1,84 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="format-detection" content="telephone=no">
-    <title>IPTV链接更新工具</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", Arial, sans-serif;
-        }
-        body {
-            background: #f0f2f5;
-            padding: 20px 15px;
-            display: flex;
-            justify-content: center;
-            min-height: 100vh;
-        }
-        .container {
-            width: 100%;
-            max-width: 500px;
-            background: #fff;
-            border-radius: 16px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-            padding: 25px;
-            position: relative;
-            overflow: hidden;
-        }
-        /* 标题样式 */
-        .title {
-            text-align: center;
-            font-size: 20px;
-            font-weight: 600;
-            color: #333;
-            margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-        }
-        .title img {
-            width: 24px;
-            height: 24px;
-        }
-        /* 配置说明区域 */
-        .setting-desc {
-            background: #f8f9fa;
-            border-left: 4px solid #1677ff;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-        }
-        .setting-desc h3 {
-            font-size: 15px;
-            color: #333;
-            margin-bottom: 10px;
-            font-weight: 500;
-        }
-        .setting-desc ul {
-            padding-left: 20px;
-            font-size: 14px;
-            color: #666;
-            line-height: 1.6;
-        }
-        .setting-desc ul li {
-            margin-bottom: 5px;
-        }
-        .success-tag {
-            color: #52c41a;
-            font-weight: 500;
-        }
-        .error-tag {
-            color: #ff4d4f;
-            font-weight: 500;
-        }
-        /* 功能模块通用样式 */
-        .module {
-            margin-bottom: 25px;
-        }
-        .module-title {
-            font-size: 16px;
-            color: #333;
-            margin-bottom: 12px;
-            font-weight: 500;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-        .module-title i {
-            font-style: normal;
-            width: 20px;
-            height: 20px;
-            background: #1677ff;
-            color: #fff;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 12px;
-        }
-        /* 表单样式 */
-        .form-item {
-            margin-bottom: 15px;
-        }
-        .form-item label {
-            display: block;
-            font-size: 14px;
-            color: #555;
-            margin-bottom: 6px;
-        }
-        select, input {
-            width: 100%;
-            padding: 12px 15px;
-            border: 1px solid #d9d9d9;
-            border-radius: 8px;
-            font-size: 14px;
-            background: #fff;
-            transition: border-color 0.3s;
-        }
-        select:focus, input:focus {
-            outline: none;
-            border-color: #1677ff;
-            box-shadow: 0 0 0 2px rgba(22, 119, 255, 0.1);
-        }
-        /* 按钮样式 */
-        .btn {
-            width: 100%;
-            padding: 12px;
-            border: none;
-            border-radius: 8px;
-            font-size: 15px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
-        }
-        .btn-primary {
-            background: #1677ff;
-            color: #fff;
-            box-shadow: 0 4px 0 #0f5ccc;
-            position: relative;
-            top: 0;
-        }
-        .btn-primary:active {
-            top: 2px;
-            box-shadow: 0 2px 0 #0f5ccc;
-        }
-        .btn-success {
-            background: #52c41a;
-            color: #fff;
-            box-shadow: 0 4px 0 #389e0d;
-            position: relative;
-            top: 0;
-        }
-        .btn-success:active {
-            top: 2px;
-            box-shadow: 0 2px 0 #389e0d;
-        }
-        .btn-danger {
-            background: #ff4d4f;
-            color: #fff;
-            border-radius: 4px;
-            padding: 4px 10px;
-            font-size: 12px;
-            width: auto;
-        }
-        /* 账号列表样式 */
-        .account-list {
-            border: 1px solid #d9d9d9;
-            border-radius: 8px;
-            overflow: hidden;
-            margin-bottom: 10px;
-        }
-        .account-item {
-            padding: 12px 15px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid #f0f0f0;
-        }
-        .account-item:last-child {
-            border-bottom: none;
-        }
-        .account-item.valid {
-            background: #f6ffed;
-        }
-        .account-item.invalid {
-            background: #fff2f0;
-        }
-        .account-name {
-            font-size: 14px;
-            color: #333;
-        }
-        /* 订阅地址区域 */
-        .sub-url {
-            background: #f5fafe;
-            border-radius: 8px;
-            padding: 15px;
-        }
-        .sub-url-tip {
-            font-size: 13px;
-            color: #666;
-            margin-bottom: 10px;
-            text-align: center;
-        }
-        .url-input {
-            position: relative;
-        }
-        .url-input input {
-            padding-right: 80px;
-        }
-        .copy-btn {
-            position: absolute;
-            right: 5px;
-            top: 50%;
-            transform: translateY(-50%);
-            width: 70px;
-            padding: 6px 0;
-            font-size: 12px;
-        }
-        .sub-tip-bottom {
-            font-size: 12px;
-            color: #999;
-            text-align: center;
-            margin-top: 8px;
-        }
-        /* 底部链接 */
-        .footer-link {
-            text-align: center;
-            margin-top: 20px;
-        }
-        .footer-link a {
-            color: #1677ff;
-            font-size: 14px;
-            text-decoration: none;
-            margin: 0 8px;
-        }
-        .footer-link a:hover {
-            text-decoration: underline;
-        }
-        /* 加载动画 */
-        .loading {
-            display: none;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
-            font-size: 14px;
-            color: #1677ff;
-            margin-top: 10px;
-        }
-        .loading-spinner {
-            width: 16px;
-            height: 16px;
-            border: 2px solid #1677ff;
-            border-top: 2px solid transparent;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        /* 提示弹窗 */
-        .modal {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: rgba(0,0,0,0.7);
-            color: #fff;
-            padding: 12px 20px;
-            border-radius: 8px;
-            font-size: 14px;
-            z-index: 9999;
-            display: none;
-            animation: fade 0.3s;
-        }
-        @keyframes fade {
-            0% { opacity: 0; }
-            100% { opacity: 1; }
-        }
-    </style>
+<meta charset="UTF-8">
+<title>Mnet 直播自动刷新</title>
+<script src="https://cdn.jwplayer.com/libraries/IDzF9Zmk.js"></script>
 </head>
 <body>
-    <div class="container">
-        <!-- 标题 -->
-        <div class="title">
-            <img src="https://cdn.jsdelivr.net/gh/1996TV/LOGO1@main/icon/iptv.png" alt="logo">
-            IPTV链接更新工具
-        </div>
+<div id="video-player" style="width:100%;height:480px;"></div>
 
-        <!-- 配置说明 -->
-        <div class="setting-desc">
-            <h3>当前设置：</h3>
-            <ul>
-                <li>账号：加QQ群1078393318领福利</li>
-                <li>检测规则：</li>
-                <li>• 显示<span class="success-tag">绿色成功 ✅</span> = 账号和密码有效</li>
-                <li>• 红色报错<span class="error-tag">❌</span> = 账号或密码无效</li>
-                <li>• 注意：可以输入任意长度的数字密码</li>
-            </ul>
-        </div>
+<script>
+const API_ENDPOINT = "https://api.hypera.live/api/v3/science"; // 获取最新 m3u8 的接口
+const REFRESH_INTERVAL = 120000; // 2分钟刷新一次 token
+let player = null;
 
-        <!-- 检测并更新模块 -->
-        <div class="module">
-            <div class="module-title">
-                <i>1</i>检测并更新
-            </div>
-            <div class="form-item">
-                <label for="accountSelect">选择账号：</label>
-                <select id="accountSelect">
-                    <option value="加QQ群1078393318领福利">加QQ群1078393318领福利</option>
-                </select>
-            </div>
-            <div class="form-item">
-                <label for="passwordInput">输入数字密码：</label>
-                <input type="number" id="passwordInput" placeholder="输入数字（任意长度）">
-            </div>
-            <button class="btn btn-primary" onclick="checkAndUpdate()">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="11" cy="11" r="8"></circle>
-                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-                </svg>
-                检测并更新
-            </button>
-            <div class="loading" id="checkLoading">
-                <div class="loading-spinner"></div>
-                检测中...
-            </div>
-        </div>
+// 模拟请求 API 获取最新 play_url
+async function fetchPlayUrl() {
+    try {
+        // ⚠️ 实际可用 API 需要你自己的 token 或 session
+        // 这里用 fetch 模拟获取 JSON 数据
+        const response = await fetch(API_ENDPOINT, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "x-parent-request-id": "自动生成或 Turnstile token"
+            },
+            body: JSON.stringify({ platform: "web", player: "jwplayer6" })
+        });
 
-        <!-- 账号管理模块 -->
-        <div class="module">
-            <div class="module-title">
-                <i>2</i>账号管理
-            </div>
-            <div class="account-list" id="accountList">
-                <div class="account-item valid">
-                    <span class="account-name">加QQ群1078393318领福利</span>
-                </div>
-                <div class="account-item invalid">
-                    <span class="account-name">加QQ群1077202079</span>
-                    <button class="btn btn-danger" onclick="deleteAccount(this)">删除</button>
-                </div>
-            </div>
-            <div style="display: flex; gap: 10px;">
-                <input type="text" id="newAccountInput" placeholder="输入新账号名称" style="flex: 1;">
-                <button class="btn btn-success" onclick="addAccount()" style="width: 80px;">添加账号</button>
-            </div>
-        </div>
+        const data = await response.json();
 
-        <!-- 订阅地址模块 -->
-        <div class="module">
-            <div class="module-title">
-                <i>3</i>订阅地址
-            </div>
-            <div class="sub-url">
-                <div class="sub-url-tip">点击下面的地址会自动选中，然后按Ctrl+C复制：</div>
-                <div class="url-input">
-                    <input type="text" id="subUrlInput" value="http://hufa.zabc.net:8080/iptvpro.txt" readonly>
-                    <button class="btn btn-success copy-btn" onclick="copySubUrl()">复制</button>
-                </div>
-                <div class="sub-tip-bottom">点击地址全选，然后按Ctrl+C复制</div>
-            </div>
-        </div>
-
-        <!-- 底部链接 -->
-        <div class="footer-link">
-            <a href="#" onclick="viewPlayList()">查看播放列表文件</a> | 
-            <a href="#" onclick="viewAccountList()">查看账号列表</a>
-        </div>
-
-        <!-- 提示弹窗 -->
-        <div class="modal" id="tipModal"></div>
-    </div>
-
-    <script>
-        // 存储账号数据
-        let accountData = [
-            { name: "加QQ群1078393318领福利", valid: true },
-            { name: "加QQ群1077202079", valid: false }
-        ];
-
-        // 检测并更新链接
-        function checkAndUpdate() {
-            const password = document.getElementById('passwordInput').value.trim();
-            const selectedAccount = document.getElementById('accountSelect').value;
-            
-            if (!password) {
-                showTip("请输入数字密码！");
-                return;
-            }
-
-            // 显示加载
-            const loading = document.getElementById('checkLoading');
-            loading.style.display = 'flex';
-
-            // 模拟检测接口请求（实际可替换为真实接口）
-            setTimeout(() => {
-                loading.style.display = 'none';
-                // 模拟检测结果：密码为任意数字都返回成功
-                if (!isNaN(Number(password))) {
-                    showTip("检测成功！链接已更新 ✅", "success");
-                    // 更新订阅地址（模拟）
-                    document.getElementById('subUrlInput').value = `http://hufa.zabc.net:8080/iptvpro_${password}.txt`;
-                } else {
-                    showTip("检测失败！密码必须为数字 ❌", "error");
-                }
-            }, 1500);
+        // data.play_url 中包含最新 m3u8
+        if (data.play_url) {
+            return data.play_url;
+        } else if (data.video_streams && data.video_streams.length > 0) {
+            return data.video_streams[0];
+        } else {
+            console.error("未获取到播放链接");
+            return null;
         }
+    } catch (err) {
+        console.error("请求 play_url 出错", err);
+        return null;
+    }
+}
 
-        // 添加账号
-        function addAccount() {
-            const newAccount = document.getElementById('newAccountInput').value.trim();
-            if (!newAccount) {
-                showTip("请输入新账号名称！");
-                return;
-            }
+// 初始化 JWPlayer 并播放
+async function initPlayer() {
+    const url = await fetchPlayUrl();
+    if (!url) return;
 
-            // 检查是否已存在
-            const isExist = accountData.some(item => item.name === newAccount);
-            if (isExist) {
-                showTip("该账号已存在！");
-                return;
-            }
+    player = jwplayer("video-player").setup({
+        file: url,
+        width: "100%",
+        height: 480,
+        autostart: true,
+        controls: true
+    });
 
-            // 添加到数据和页面
-            accountData.push({ name: newAccount, valid: true });
-            updateAccountList();
-            updateAccountSelect();
-            document.getElementById('newAccountInput').value = '';
-            showTip("账号添加成功！");
+    // 播放错误自动刷新
+    player.on("error", async () => {
+        console.warn("播放错误，尝试刷新 token...");
+        const newUrl = await fetchPlayUrl();
+        if (newUrl) {
+            player.load([{ file: newUrl }]);
+            player.play();
         }
+    });
 
-        // 删除账号
-        function deleteAccount(el) {
-            const accountName = el.parentElement.querySelector('.account-name').textContent;
-            // 过滤数据
-            accountData = accountData.filter(item => item.name !== accountName);
-            // 更新页面
-            updateAccountList();
-            updateAccountSelect();
-            showTip("账号已删除！");
+    // 定时刷新 token 并更新 m3u8
+    setInterval(async () => {
+        console.log("定时刷新 play_url...");
+        const newUrl = await fetchPlayUrl();
+        if (newUrl && player) {
+            player.load([{ file: newUrl }]);
         }
+    }, REFRESH_INTERVAL);
+}
 
-        // 更新账号列表显示
-        function updateAccountList() {
-            const accountList = document.getElementById('accountList');
-            accountList.innerHTML = '';
-            
-            accountData.forEach(item => {
-                const itemEl = document.createElement('div');
-                itemEl.className = `account-item ${item.valid ? 'valid' : 'invalid'}`;
-                itemEl.innerHTML = `
-                    <span class="account-name">${item.name}</span>
-                    ${item.valid ? '' : '<button class="btn btn-danger" onclick="deleteAccount(this)">删除</button>'}
-                `;
-                accountList.appendChild(itemEl);
-            });
-        }
-
-        // 更新账号下拉选择框
-        function updateAccountSelect() {
-            const accountSelect = document.getElementById('accountSelect');
-            accountSelect.innerHTML = '';
-            
-            accountData.forEach(item => {
-                const option = document.createElement('option');
-                option.value = item.name;
-                option.textContent = item.name;
-                accountSelect.appendChild(option);
-            });
-        }
-
-        // 复制订阅地址
-        function copySubUrl() {
-            const urlInput = document.getElementById('subUrlInput');
-            urlInput.select();
-            navigator.clipboard.writeText(urlInput.value)
-                .then(() => {
-                    showTip("订阅地址复制成功！");
-                })
-                .catch(() => {
-                    showTip("复制失败，请手动复制！", "error");
-                });
-        }
-
-        // 查看播放列表文件
-        function viewPlayList() {
-            showTip("正在打开播放列表文件...");
-            // 模拟打开新窗口
-            window.open(document.getElementById('subUrlInput').value, '_blank');
-        }
-
-        // 查看账号列表
-        function viewAccountList() {
-            const accountNames = accountData.map(item => item.name).join('\n');
-            alert(`可用账号列表：\n${accountNames}`);
-        }
-
-        // 显示提示弹窗
-        function showTip(text, type = "normal") {
-            const modal = document.getElementById('tipModal');
-            modal.textContent = text;
-            modal.style.display = 'block';
-            
-            if (type === "success") {
-                modal.style.background = "rgba(82, 196, 26, 0.8)";
-            } else if (type === "error") {
-                modal.style.background = "rgba(255, 77, 79, 0.8)";
-            } else {
-                modal.style.background = "rgba(0,0,0,0.7)";
-            }
-
-            setTimeout(() => {
-                modal.style.display = 'none';
-            }, 2000);
-        }
-
-        // 页面加载初始化
-        window.onload = function() {
-            // 点击订阅地址自动选中
-            document.getElementById('subUrlInput').addEventListener('click', function() {
-                this.select();
-            });
-        }
-    </script>
+// 启动
+initPlayer();
+</script>
 </body>
 </html>
